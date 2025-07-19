@@ -1,0 +1,54 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Development files
+*.log
+logs
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Docker
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Data files (these should be mounted as volumes)
+data/
+# Exclude JSON data files but keep config files
+*.json
+!package*.json
+!tsconfig*.json
+
+# Testing
+coverage/
+.nyc_output
+test-results/

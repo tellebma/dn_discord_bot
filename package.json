@@ -1,0 +1,48 @@
+{
+  "name": "discord-bot-template-ts",
+  "version": "1.0.0",
+  "description": "A Discord bot template with TypeScript, featuring advanced command system and modern development practices",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "start:deploy": "npm run deploy:commands:built && npm start",
+    "dev": "tsx watch src/app.ts",
+    "dev:build": "tsc --watch",
+    "deploy:commands": "tsx src/deploy-commands.ts",
+    "deploy:commands:built": "node dist/deploy-commands.js",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "template",
+    "typescript",
+    "discord.js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.17.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
