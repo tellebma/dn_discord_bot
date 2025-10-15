@@ -49,7 +49,7 @@ export class PlanificateurHebdomadaire {
    */
   public demarrerPlanificateur(): void {
     if (this.estPlanifie) return;
-    
+
     this.estPlanifie = true;
     this.planifierPublicationsHebdomadaires();
   }
@@ -64,9 +64,12 @@ export class PlanificateurHebdomadaire {
 
     setTimeout(() => {
       this.envoyerPlanHebdomadaire();
-      setInterval(() => {
-        this.envoyerPlanHebdomadaire();
-      }, 7 * 24 * 60 * 60 * 1000); // Tous les 7 jours
+      setInterval(
+        () => {
+          this.envoyerPlanHebdomadaire();
+        },
+        7 * 24 * 60 * 60 * 1000
+      ); // Tous les 7 jours
     }, tempsJusquaLundi);
   }
 
@@ -77,10 +80,10 @@ export class PlanificateurHebdomadaire {
     const date = new Date(depuis);
     const jour = date.getDay();
     const joursJusquaLundi = jour === 0 ? 1 : 8 - jour; // Si dimanche (0), le prochain lundi est dans 1 jour
-    
+
     date.setDate(date.getDate() + joursJusquaLundi);
     date.setHours(10, 0, 0, 0); // 10h du matin le lundi
-    
+
     return date;
   }
 
@@ -94,7 +97,7 @@ export class PlanificateurHebdomadaire {
     }
 
     try {
-      const canal = await this.client.channels.fetch(this.idCanal) as TextChannel;
+      const canal = (await this.client.channels.fetch(this.idCanal)) as TextChannel;
       if (!canal) {
         console.error('Canal introuvable pour les plans hebdomadaires');
         return;
@@ -105,10 +108,10 @@ export class PlanificateurHebdomadaire {
 
       await canal.send({ embeds: [embed] });
       this.sauvegarderPlanHebdo(planHebdo);
-      
+
       console.log('Plan hebdomadaire envoyé avec succès');
     } catch (erreur) {
-      console.error('Erreur lors de l\'envoi du plan hebdomadaire :', erreur);
+      console.error("Erreur lors de l'envoi du plan hebdomadaire :", erreur);
     }
   }
 
@@ -118,21 +121,21 @@ export class PlanificateurHebdomadaire {
   private genererPlanHebdomadaire(): PlanHebdomadaire {
     const gestionnaireJeux = GestionnairePoolJeux.getInstance();
     const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
-    
+
     const tousLesJeux = gestionnaireJeux.obtenirJeux();
     const nombreJeux = Math.min(5, tousLesJeux.length); // Jusqu'à 5 jeux par semaine
     const jeuxSelectionnes = gestionnaireJeux.obtenirJeuxAleatoires(nombreJeux);
-    
+
     // Récupère toutes les activités actives pour la semaine
     const activitesExtras = gestionnaireActivites.obtenirActivitesActives();
-    
+
     const chaineSemaine = this.obtenirChaineSemaine(new Date());
-    
+
     return {
       semaine: chaineSemaine,
       jeux: jeuxSelectionnes,
       activitesExtras,
-      genereLe: new Date()
+      genereLe: new Date(),
     };
   }
 
@@ -156,11 +159,11 @@ export class PlanificateurHebdomadaire {
    */
   private creerEmbedPlanHebdo(plan: PlanHebdomadaire): EmbedBuilder {
     const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
-    
+
     const embed = new EmbedBuilder()
       .setTitle('🗓️ Plan Hebdomadaire')
       .setDescription(`Plan pour la semaine : ${plan.semaine}`)
-      .setColor(0x9966FF)
+      .setColor(0x9966ff)
       .setTimestamp()
       .setFooter({ text: 'Bonne semaine à tous ! 🎮📅' });
 
@@ -169,33 +172,36 @@ export class PlanificateurHebdomadaire {
       embed.addFields({
         name: '🎮 Jeux',
         value: '❌ Aucun jeu disponible. Utilisez `/addgame` pour ajouter des jeux.',
-        inline: false
+        inline: false,
       });
     } else {
-      const listeJeux = plan.jeux.map((jeu, index) => {
-        let infoJeu = `**${index + 1}. ${jeu.nom}**`;
-        if (jeu.description) infoJeu += `\n   ${jeu.description}`;
-        
-        if (jeu.joueursMin || jeu.joueursMax) {
-          const joueurs = jeu.joueursMin && jeu.joueursMax 
-            ? `${jeu.joueursMin}-${jeu.joueursMax}` 
-            : jeu.joueursMin 
-            ? `${jeu.joueursMin}+` 
-            : `jusqu'à ${jeu.joueursMax}`;
-          infoJeu += `\n   👥 ${joueurs} joueurs`;
-        }
-        
-        if (jeu.categorie) {
-          infoJeu += `\n   📂 ${jeu.categorie}`;
-        }
-        
-        return infoJeu;
-      }).join('\n\n');
+      const listeJeux = plan.jeux
+        .map((jeu, index) => {
+          let infoJeu = `**${index + 1}. ${jeu.nom}**`;
+          if (jeu.description) infoJeu += `\n   ${jeu.description}`;
+
+          if (jeu.joueursMin || jeu.joueursMax) {
+            const joueurs =
+              jeu.joueursMin && jeu.joueursMax
+                ? `${jeu.joueursMin}-${jeu.joueursMax}`
+                : jeu.joueursMin
+                  ? `${jeu.joueursMin}+`
+                  : `jusqu'à ${jeu.joueursMax}`;
+            infoJeu += `\n   👥 ${joueurs} joueurs`;
+          }
+
+          if (jeu.categorie) {
+            infoJeu += `\n   📂 ${jeu.categorie}`;
+          }
+
+          return infoJeu;
+        })
+        .join('\n\n');
 
       embed.addFields({
         name: `🎮 Jeux (${plan.jeux.length})`,
         value: listeJeux,
-        inline: false
+        inline: false,
       });
     }
 
@@ -204,7 +210,7 @@ export class PlanificateurHebdomadaire {
       embed.addFields({
         name: '📅 Activités Extras',
         value: '❌ Aucune activité extra planifiée. Utilisez `/addactivity` pour en ajouter.',
-        inline: false
+        inline: false,
       });
     } else {
       // Groupe les activités par jour
@@ -217,25 +223,29 @@ export class PlanificateurHebdomadaire {
       });
 
       const joursTries = Object.keys(activitesParJour).map(Number).sort();
-      const texteActivites = joursTries.map(jourSemaine => {
-        const nomJour = gestionnaireActivites.obtenirNomJour(jourSemaine);
-        const activitesJour = activitesParJour[jourSemaine];
-        
-        const listeActivites = activitesJour.map(activite => {
-          let info = `**${activite.nom}**`;
-          if (activite.heure) info += ` • ${activite.heure}`;
-          if (activite.lieu) info += ` • 📍 ${activite.lieu}`;
-          if (activite.description) info += `\n   ${activite.description}`;
-          return info;
-        }).join('\n');
-        
-        return `**${nomJour} :**\n${listeActivites}`;
-      }).join('\n\n');
+      const texteActivites = joursTries
+        .map(jourSemaine => {
+          const nomJour = gestionnaireActivites.obtenirNomJour(jourSemaine);
+          const activitesJour = activitesParJour[jourSemaine];
+
+          const listeActivites = activitesJour
+            .map(activite => {
+              let info = `**${activite.nom}**`;
+              if (activite.heure) info += ` • ${activite.heure}`;
+              if (activite.lieu) info += ` • 📍 ${activite.lieu}`;
+              if (activite.description) info += `\n   ${activite.description}`;
+              return info;
+            })
+            .join('\n');
+
+          return `**${nomJour} :**\n${listeActivites}`;
+        })
+        .join('\n\n');
 
       embed.addFields({
         name: `📅 Activités Extras (${plan.activitesExtras.length})`,
         value: texteActivites,
-        inline: false
+        inline: false,
       });
     }
 
@@ -259,7 +269,7 @@ export class PlanificateurHebdomadaire {
       }
 
       plans.push(plan);
-      
+
       // Garde uniquement les 10 derniers plans
       if (plans.length > 10) {
         plans = plans.slice(-10);
@@ -277,14 +287,14 @@ export class PlanificateurHebdomadaire {
   public async planHebdomadaireManuel(idCanal: string): Promise<PlanHebdomadaire> {
     const idCanalOriginal = this.idCanal;
     this.idCanal = idCanal;
-    
+
     const plan = this.genererPlanHebdomadaire();
-    const canal = await this.client.channels.fetch(idCanal) as TextChannel;
+    const canal = (await this.client.channels.fetch(idCanal)) as TextChannel;
     const embed = this.creerEmbedPlanHebdo(plan);
-    
+
     await canal.send({ embeds: [embed] });
     this.sauvegarderPlanHebdo(plan);
-    
+
     this.idCanal = idCanalOriginal;
     return plan;
   }

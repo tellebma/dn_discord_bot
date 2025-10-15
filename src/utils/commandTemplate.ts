@@ -1,9 +1,9 @@
-import type { 
-  ConfigurationCommande, 
-  ParametreCommande, 
-  ResultatValidation, 
+import type {
+  ConfigurationCommande,
+  ParametreCommande,
+  ResultatValidation,
   ValidateurParametre,
-  ContexteLog 
+  ContexteLog,
 } from '@/types/bot';
 import { Journaliseur } from '@/utils/logger';
 import type { ChatInputCommandInteraction, PermissionResolvable } from 'discord.js';
@@ -70,7 +70,9 @@ export class TemplateCommande {
     this.gestionnaire = config.gestionnaire;
 
     if (!this.nom || !this.description || !this.gestionnaire) {
-      throw new Error('Le template de commande nécessite un nom, une description et un gestionnaire');
+      throw new Error(
+        'Le template de commande nécessite un nom, une description et un gestionnaire'
+      );
     }
   }
 
@@ -90,7 +92,7 @@ export class TemplateCommande {
 
       if (!this.validerPermissions(interaction)) {
         await interaction.reply({
-          content: '❌ Vous n\'avez pas la permission d\'utiliser cette commande.',
+          content: "❌ Vous n'avez pas la permission d'utiliser cette commande.",
           ephemeral: true,
         });
         return;
@@ -98,7 +100,7 @@ export class TemplateCommande {
 
       if (!this.verifierDelaiAttente(interaction)) {
         await interaction.reply({
-          content: '⏱️ Veuillez patienter avant d\'utiliser cette commande à nouveau.',
+          content: "⏱️ Veuillez patienter avant d'utiliser cette commande à nouveau.",
           ephemeral: true,
         });
         return;
@@ -135,7 +137,7 @@ export class TemplateCommande {
       } as ContexteLog);
 
       const messageReponse = {
-        content: '❌ Une erreur s\'est produite lors de l\'exécution de cette commande.',
+        content: "❌ Une erreur s'est produite lors de l'exécution de cette commande.",
         ephemeral: true,
       };
 

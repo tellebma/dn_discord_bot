@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  CommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
 
 /**
@@ -12,43 +17,42 @@ export const data = new SlashCommandBuilder()
       .setName('basculer')
       .setDescription('Basculer une activité entre active/inactive')
       .addStringOption((option: any) =>
-        option.setName('activite')
-          .setDescription('Nom ou ID de l\'activité')
-          .setRequired(true)))
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
+  )
   .addSubcommand((subcommand: any) =>
     subcommand
       .setName('supprimer')
       .setDescription('Supprimer définitivement une activité')
       .addStringOption((option: any) =>
-        option.setName('activite')
-          .setDescription('Nom ou ID de l\'activité')
-          .setRequired(true)))
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
+  )
   .addSubcommand((subcommand: any) =>
     subcommand
       .setName('modifier')
       .setDescription('Modifier une activité')
       .addStringOption((option: any) =>
-        option.setName('activite')
-          .setDescription('Nom ou ID de l\'activité')
-          .setRequired(true))
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
       .addStringOption((option: any) =>
-        option.setName('nom')
-          .setDescription('Nouveau nom pour l\'activité')
-          .setRequired(false))
+        option.setName('nom').setDescription("Nouveau nom pour l'activité").setRequired(false)
+      )
       .addStringOption((option: any) =>
-        option.setName('description')
-          .setDescription('Nouvelle description pour l\'activité')
-          .setRequired(false))
+        option
+          .setName('description')
+          .setDescription("Nouvelle description pour l'activité")
+          .setRequired(false)
+      )
       .addStringOption((option: any) =>
-        option.setName('lieu')
-          .setDescription('Nouveau lieu pour l\'activité')
-          .setRequired(false))
+        option.setName('lieu').setDescription("Nouveau lieu pour l'activité").setRequired(false)
+      )
       .addStringOption((option: any) =>
-        option.setName('heure')
-          .setDescription('Nouvelle heure pour l\'activité')
-          .setRequired(false))
+        option.setName('heure').setDescription("Nouvelle heure pour l'activité").setRequired(false)
+      )
       .addIntegerOption((option: any) =>
-        option.setName('jour')
+        option
+          .setName('jour')
           .setDescription('Nouveau jour de la semaine')
           .setRequired(false)
           .addChoices(
@@ -59,20 +63,22 @@ export const data = new SlashCommandBuilder()
             { name: 'Jeudi', value: 4 },
             { name: 'Vendredi', value: 5 },
             { name: 'Samedi', value: 6 }
-          )))
+          )
+      )
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
 export async function execute(interaction: CommandInteraction) {
   const sousCommande = interaction.options.data[0].name;
   const entreeActivite = interaction.options.get('activite')?.value as string;
-  
+
   const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
   const activite = gestionnaireActivites.trouverActivite(entreeActivite);
-  
+
   if (!activite) {
     await interaction.reply({
       content: `❌ Activité "${entreeActivite}" introuvable !`,
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -83,15 +89,19 @@ export async function execute(interaction: CommandInteraction) {
       if (activiteBasculee) {
         const statut = activiteBasculee.estActif ? '🟢 Active' : '🔴 Inactive';
         const embed = new EmbedBuilder()
-          .setTitle('✅ Statut de l\'Activité Mis à Jour')
+          .setTitle("✅ Statut de l'Activité Mis à Jour")
           .setDescription(`**${activiteBasculee.nom}** est maintenant ${statut}`)
-          .setColor(activiteBasculee.estActif ? 0x00FF00 : 0xFF0000)
+          .setColor(activiteBasculee.estActif ? 0x00ff00 : 0xff0000)
           .addFields(
-            { name: 'Jour', value: gestionnaireActivites.obtenirNomJour(activiteBasculee.jourSemaine), inline: true },
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activiteBasculee.jourSemaine),
+              inline: true,
+            },
             { name: 'Statut', value: statut, inline: true }
           )
           .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
@@ -101,14 +111,20 @@ export async function execute(interaction: CommandInteraction) {
       if (supprimee) {
         const embed = new EmbedBuilder()
           .setTitle('🗑️ Activité Supprimée')
-          .setDescription(`**${activite.nom}** a été définitivement supprimée de l\'emploi du temps.`)
-          .setColor(0xFF0000)
+          .setDescription(
+            `**${activite.nom}** a été définitivement supprimée de l\'emploi du temps.`
+          )
+          .setColor(0xff0000)
           .addFields(
-            { name: 'Jour', value: gestionnaireActivites.obtenirNomJour(activite.jourSemaine), inline: true },
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activite.jourSemaine),
+              inline: true,
+            },
             { name: 'ID', value: activite.id, inline: true }
           )
           .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
@@ -129,8 +145,9 @@ export async function execute(interaction: CommandInteraction) {
 
       if (Object.keys(miseAJour).length === 0) {
         await interaction.reply({
-          content: '❌ Aucune modification spécifiée ! Veuillez fournir au moins un champ à mettre à jour.',
-          ephemeral: true
+          content:
+            '❌ Aucune modification spécifiée ! Veuillez fournir au moins un champ à mettre à jour.',
+          ephemeral: true,
         });
         return;
       }
@@ -140,17 +157,25 @@ export async function execute(interaction: CommandInteraction) {
         const embed = new EmbedBuilder()
           .setTitle('✅ Activité Mise à Jour')
           .setDescription(`**${activiteModifiee.nom}** a été mise à jour avec succès.`)
-          .setColor(0x00FF00)
+          .setColor(0x00ff00)
           .addFields(
-            { name: 'Jour', value: gestionnaireActivites.obtenirNomJour(activiteModifiee.jourSemaine), inline: true },
-            { name: 'Statut', value: activiteModifiee.estActif ? '🟢 Active' : '🔴 Inactive', inline: true }
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activiteModifiee.jourSemaine),
+              inline: true,
+            },
+            {
+              name: 'Statut',
+              value: activiteModifiee.estActif ? '🟢 Active' : '🔴 Inactive',
+              inline: true,
+            }
           )
           .setTimestamp();
 
         if (activiteModifiee.description) {
           embed.addFields({ name: 'Description', value: activiteModifiee.description });
         }
-        
+
         if (activiteModifiee.lieu) {
           embed.addFields({ name: 'Lieu', value: activiteModifiee.lieu, inline: true });
         }
@@ -158,7 +183,7 @@ export async function execute(interaction: CommandInteraction) {
         if (activiteModifiee.heure) {
           embed.addFields({ name: 'Heure', value: activiteModifiee.heure, inline: true });
         }
-        
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
@@ -166,7 +191,7 @@ export async function execute(interaction: CommandInteraction) {
     default:
       await interaction.reply({
         content: '❌ Sous-commande inconnue !',
-        ephemeral: true
+        ephemeral: true,
       });
   }
 }

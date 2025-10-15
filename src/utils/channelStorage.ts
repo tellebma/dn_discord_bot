@@ -45,17 +45,17 @@ export class StockageCanal {
         return {
           canalId: config.canalId || null,
           configureLe: config.configureLe ? new Date(config.configureLe) : null,
-          configurePar: config.configurePar || null
+          configurePar: config.configurePar || null,
         };
       }
     } catch (erreur) {
       console.error('Erreur lors du chargement de la configuration du canal :', erreur);
     }
-    
+
     return {
       canalId: null,
       configureLe: null,
-      configurePar: null
+      configurePar: null,
     };
   }
 
@@ -82,7 +82,7 @@ export class StockageCanal {
     this.config = {
       canalId,
       configureLe: new Date(),
-      configurePar: utilisateurId
+      configurePar: utilisateurId,
     };
     this.sauvegarderConfig();
   }
@@ -108,12 +108,8 @@ export class StockageCanal {
     this.config = {
       canalId: null,
       configureLe: null,
-      configurePar: null
+      configurePar: null,
     };
     this.sauvegarderConfig();
   }
 }
-
-
-
-

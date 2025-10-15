@@ -48,7 +48,11 @@ export default creerCommandeStandard({
         { name: '📋 Canaux', value: `${serveur.channels.cache.size}`, inline: true },
         { name: '🎭 Rôles', value: `${serveur.roles.cache.size}`, inline: true },
         { name: '😀 Émojis', value: `${serveur.emojis.cache.size}`, inline: true },
-        { name: '🔒 Niveau de Vérification', value: serveur.verificationLevel.toString(), inline: true },
+        {
+          name: '🔒 Niveau de Vérification',
+          value: serveur.verificationLevel.toString(),
+          inline: true,
+        },
         { name: '🛡️ Niveau de Boost', value: `Niveau ${serveur.premiumTier}`, inline: true }
       );
 

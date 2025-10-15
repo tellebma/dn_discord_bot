@@ -8,9 +8,7 @@ dotenvConfig();
 
 // Initialisation du client Discord avec les intentions nécessaires
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 }) as ClientEtendu;
 
 client.commands = new Collection<string, CommandeBot>();
@@ -23,13 +21,13 @@ async function chargerCommandes(): Promise<void> {
   const cheminCommandes = join(__dirname, 'commands');
 
   try {
-    const fichiersCommandes = readdirSync(cheminCommandes).filter(fichier => 
-      fichier.endsWith('.ts') || fichier.endsWith('.js')
+    const fichiersCommandes = readdirSync(cheminCommandes).filter(
+      fichier => fichier.endsWith('.ts') || fichier.endsWith('.js')
     );
 
     for (const fichier of fichiersCommandes) {
       const cheminFichier = join(cheminCommandes, fichier);
-      
+
       try {
         // Import dynamique pour la compatibilité des modules ES
         const moduleCommande = await import(cheminFichier);
@@ -40,7 +38,9 @@ async function chargerCommandes(): Promise<void> {
           commandes.push(commande.data.toJSON());
           console.log(`✅ Commande chargée : ${commande.data.name}`);
         } else {
-          console.log(`⚠️ La commande ${cheminFichier} n'a pas les propriétés requises "data" ou "execute".`);
+          console.log(
+            `⚠️ La commande ${cheminFichier} n'a pas les propriétés requises "data" ou "execute".`
+          );
         }
       } catch (erreur) {
         console.error(`❌ Erreur lors du chargement de la commande ${fichier} :`, erreur);
@@ -64,13 +64,13 @@ async function chargerEvenements(): Promise<void> {
   const cheminEvenements = join(__dirname, 'events');
 
   try {
-    const fichiersEvenements = readdirSync(cheminEvenements).filter(fichier => 
-      fichier.endsWith('.ts') || fichier.endsWith('.js')
+    const fichiersEvenements = readdirSync(cheminEvenements).filter(
+      fichier => fichier.endsWith('.ts') || fichier.endsWith('.js')
     );
 
     for (const fichier of fichiersEvenements) {
       const cheminFichier = join(cheminEvenements, fichier);
-      
+
       try {
         const moduleEvenement = await import(cheminFichier);
         const evenement = moduleEvenement.default || moduleEvenement;
@@ -95,20 +95,19 @@ async function chargerEvenements(): Promise<void> {
  */
 async function deployerCommandes(commandes: any[]): Promise<void> {
   if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
-    throw new Error('Variables d\'environnement requises manquantes : DISCORD_TOKEN ou DISCORD_CLIENT_ID');
+    throw new Error(
+      "Variables d'environnement requises manquantes : DISCORD_TOKEN ou DISCORD_CLIENT_ID"
+    );
   }
 
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
   try {
-    console.log('🔄 Début de l\'actualisation des commandes (/) de l\'application.');
+    console.log("🔄 Début de l'actualisation des commandes (/) de l'application.");
 
-    await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-      { body: commandes }
-    );
+    await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: commandes });
 
-    console.log('✅ Les commandes (/) de l\'application ont été rechargées avec succès.');
+    console.log("✅ Les commandes (/) de l'application ont été rechargées avec succès.");
   } catch (erreur) {
     console.error('❌ Erreur lors du déploiement des commandes :', erreur);
   }
@@ -119,7 +118,7 @@ client.on('interactionCreate', async interaction => {
   // Gestion de l'autocomplétion
   if (interaction.isAutocomplete()) {
     const commande = client.commands.get(interaction.commandName);
-    
+
     if (!commande) {
       console.error(`Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`);
       return;
@@ -140,12 +139,12 @@ client.on('interactionCreate', async interaction => {
   if (interaction.isButton()) {
     const { GestionnaireVotes } = await import('@/fonctions/voting/voteManager');
     const gestionnaireVotes = GestionnaireVotes.getInstance(client);
-    
+
     // Vérifier si c'est un bouton de vote
     if (interaction.customId.startsWith('vote_')) {
       const idJeu = interaction.customId.replace('vote_', '');
       const sessionActive = gestionnaireVotes.obtenirSessionActive();
-      
+
       if (sessionActive) {
         const voteEnregistre = await gestionnaireVotes.gererVote(
           sessionActive.id,
@@ -156,18 +155,18 @@ client.on('interactionCreate', async interaction => {
         if (voteEnregistre) {
           await interaction.reply({
             content: '✅ Votre vote a été enregistré de manière anonyme !',
-            ephemeral: true
+            ephemeral: true,
           });
         } else {
           await interaction.reply({
-            content: '❌ Erreur lors de l\'enregistrement de votre vote.',
-            ephemeral: true
+            content: "❌ Erreur lors de l'enregistrement de votre vote.",
+            ephemeral: true,
           });
         }
       } else {
         await interaction.reply({
-          content: '❌ Cette session de vote n\'est plus active.',
-          ephemeral: true
+          content: "❌ Cette session de vote n'est plus active.",
+          ephemeral: true,
         });
       }
     }
@@ -190,7 +189,7 @@ client.on('interactionCreate', async interaction => {
     console.error(`Erreur lors de l'exécution de ${interaction.commandName} :`, erreur);
 
     const messageErreur = {
-      content: 'Une erreur s\'est produite lors de l\'exécution de cette commande !',
+      content: "Une erreur s'est produite lors de l'exécution de cette commande !",
       ephemeral: true,
     };
 
@@ -224,11 +223,11 @@ async function demarrer(): Promise<void> {
   try {
     await chargerEvenements();
     await chargerCommandes();
-    
+
     if (!process.env.DISCORD_TOKEN) {
       throw new Error('DISCORD_TOKEN est requis');
     }
-    
+
     await client.login(process.env.DISCORD_TOKEN);
   } catch (erreur) {
     console.error('Échec du démarrage du bot :', erreur);

@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  CommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 
 /**
@@ -8,36 +13,38 @@ export const data = new SlashCommandBuilder()
   .setName('removegame')
   .setDescription('Supprimer un jeu du pool')
   .addStringOption((option: any) =>
-    option.setName('jeu')
+    option
+      .setName('jeu')
       .setDescription('Nom ou ID du jeu à supprimer')
       .setRequired(true)
-      .setAutocomplete(true))
+      .setAutocomplete(true)
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
 export async function execute(interaction: CommandInteraction) {
   const entreeJeu = interaction.options.get('jeu')?.value as string;
 
   const gestionnaireJeux = GestionnairePoolJeux.getInstance();
-  
+
   // Recherche du jeu
   const jeu = gestionnaireJeux.trouverJeu(entreeJeu);
-  
+
   if (!jeu) {
     await interaction.reply({
       content: `❌ Jeu "${entreeJeu}" introuvable dans le pool !`,
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
 
   // Suppression du jeu
   const supprime = gestionnaireJeux.supprimerJeu(jeu.id);
-  
+
   if (supprime) {
     const embed = new EmbedBuilder()
       .setTitle('🗑️ Jeu Supprimé')
       .setDescription(`Le jeu **${jeu.nom}** a été supprimé du pool.`)
-      .setColor(0xFF0000)
+      .setColor(0xff0000)
       .addFields(
         { name: 'ID', value: jeu.id, inline: true },
         { name: 'Catégorie', value: jeu.categorie || 'Non définie', inline: true }
@@ -53,7 +60,7 @@ export async function execute(interaction: CommandInteraction) {
   } else {
     await interaction.reply({
       content: '❌ Erreur lors de la suppression du jeu.',
-      ephemeral: true
+      ephemeral: true,
     });
   }
 }
@@ -68,20 +75,16 @@ export async function autocomplete(interaction: any) {
 
   // Filtrer les jeux selon la saisie
   const filtered = jeux
-    .filter(jeu => 
-      jeu.nom.toLowerCase().includes(focusedValue.toLowerCase()) ||
-      jeu.id.includes(focusedValue)
+    .filter(
+      jeu =>
+        jeu.nom.toLowerCase().includes(focusedValue.toLowerCase()) || jeu.id.includes(focusedValue)
     )
     .slice(0, 25); // Discord limite à 25 choix
 
   await interaction.respond(
     filtered.map(jeu => ({
       name: `${jeu.nom}${jeu.categorie ? ` (${jeu.categorie})` : ''}`,
-      value: jeu.id
+      value: jeu.id,
     }))
   );
 }
-
-
-
-

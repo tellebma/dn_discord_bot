@@ -35,23 +35,24 @@ export class GestionnaireActivitesExtras {
         const donnees = fs.readFileSync(FICHIER_ACTIVITES_EXTRAS, 'utf-8');
         const parse = JSON.parse(donnees);
         return {
-          activites: parse.activities?.map((activite: any) => ({
-            id: activite.id,
-            nom: activite.name,
-            description: activite.description,
-            lieu: activite.location,
-            heure: activite.time,
-            jourSemaine: activite.dayOfWeek,
-            estActif: activite.isActive,
-            ajoutePar: activite.addedBy,
-            ajouteLe: new Date(activite.addedAt)
-          })) || []
+          activites:
+            parse.activities?.map((activite: any) => ({
+              id: activite.id,
+              nom: activite.name,
+              description: activite.description,
+              lieu: activite.location,
+              heure: activite.time,
+              jourSemaine: activite.dayOfWeek,
+              estActif: activite.isActive,
+              ajoutePar: activite.addedBy,
+              ajouteLe: new Date(activite.addedAt),
+            })) || [],
         };
       }
     } catch (erreur) {
       console.error('Erreur lors du chargement des activités extras :', erreur);
     }
-    
+
     return { activites: [] };
   }
 
@@ -75,8 +76,8 @@ export class GestionnaireActivitesExtras {
           dayOfWeek: activite.jourSemaine,
           isActive: activite.estActif,
           addedBy: activite.ajoutePar,
-          addedAt: activite.ajouteLe
-        }))
+          addedAt: activite.ajouteLe,
+        })),
       };
       fs.writeFileSync(FICHIER_ACTIVITES_EXTRAS, JSON.stringify(donnees, null, 2));
     } catch (erreur) {
@@ -92,9 +93,9 @@ export class GestionnaireActivitesExtras {
     const nouvelleActivite: ActiviteExtra = {
       ...activite,
       id: Date.now().toString(),
-      ajouteLe: new Date()
+      ajouteLe: new Date(),
     };
-    
+
     this.poolActivites.activites.push(nouvelleActivite);
     this.sauvegarderActivites();
     return nouvelleActivite;
@@ -106,8 +107,10 @@ export class GestionnaireActivitesExtras {
    */
   public supprimerActivite(idActivite: string): boolean {
     const longueurInitiale = this.poolActivites.activites.length;
-    this.poolActivites.activites = this.poolActivites.activites.filter(activite => activite.id !== idActivite);
-    
+    this.poolActivites.activites = this.poolActivites.activites.filter(
+      activite => activite.id !== idActivite
+    );
+
     if (this.poolActivites.activites.length < longueurInitiale) {
       this.sauvegarderActivites();
       return true;
@@ -148,8 +151,8 @@ export class GestionnaireActivitesExtras {
    * @param jourSemaine Jour de la semaine (0 = Dimanche, 1 = Lundi, etc.)
    */
   public obtenirActivitesPourJour(jourSemaine: number): ActiviteExtra[] {
-    return this.poolActivites.activites.filter(activite => 
-      activite.estActif && activite.jourSemaine === jourSemaine
+    return this.poolActivites.activites.filter(
+      activite => activite.estActif && activite.jourSemaine === jourSemaine
     );
   }
 
@@ -157,9 +160,9 @@ export class GestionnaireActivitesExtras {
    * Recherche une activité par nom ou ID
    */
   public trouverActivite(nomOuId: string): ActiviteExtra | undefined {
-    return this.poolActivites.activites.find(activite => 
-      activite.id === nomOuId || 
-      activite.nom.toLowerCase().includes(nomOuId.toLowerCase())
+    return this.poolActivites.activites.find(
+      activite =>
+        activite.id === nomOuId || activite.nom.toLowerCase().includes(nomOuId.toLowerCase())
     );
   }
 
@@ -177,7 +180,7 @@ export class GestionnaireActivitesExtras {
    * @returns L'activité mise à jour ou null si non trouvée
    */
   public mettreAJourActivite(
-    idActivite: string, 
+    idActivite: string,
     miseAJour: Partial<Omit<ActiviteExtra, 'id' | 'ajouteLe' | 'ajoutePar'>>
   ): ActiviteExtra | null {
     const activite = this.poolActivites.activites.find(a => a.id === idActivite);

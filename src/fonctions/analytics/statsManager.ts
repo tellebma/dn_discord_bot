@@ -3,7 +3,12 @@ import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivitie
 import { ClientSteam } from '@/fonctions/external/steamAPI';
 import { ClientTwitch } from '@/fonctions/external/twitchAPI';
 import { ClientRAWG } from '@/fonctions/external/rawgAPI';
-import { StatistiquesGenerales, StatistiquesJeux, TendanceExterne, DonneesStatistiques } from '@/types/stats';
+import {
+  StatistiquesGenerales,
+  StatistiquesJeux,
+  TendanceExterne,
+  DonneesStatistiques,
+} from '@/types/stats';
 import fs from 'fs';
 import path from 'path';
 
@@ -35,7 +40,7 @@ export class GestionnaireStatistiques {
           jeuxSelectionnes: donnees.jeuxSelectionnes || {},
           participations: donnees.participations || {},
           votesCasts: donnees.votesCasts || {},
-          derniereMAJ: new Date(donnees.derniereMAJ || Date.now())
+          derniereMAJ: new Date(donnees.derniereMAJ || Date.now()),
         };
       }
     } catch (erreur) {
@@ -46,7 +51,7 @@ export class GestionnaireStatistiques {
       jeuxSelectionnes: {},
       participations: {},
       votesCasts: {},
-      derniereMAJ: new Date()
+      derniereMAJ: new Date(),
     };
   }
 
@@ -59,7 +64,7 @@ export class GestionnaireStatistiques {
 
       const donnees = {
         ...this.stats,
-        derniereMAJ: new Date()
+        derniereMAJ: new Date(),
       };
 
       fs.writeFileSync(FICHIER_STATS, JSON.stringify(donnees, null, 2));
@@ -98,12 +103,14 @@ export class GestionnaireStatistiques {
     const topJeux = Object.entries(this.stats.jeuxSelectionnes)
       .map(([id, selections]) => {
         const jeu = gestionnaireJeux.trouverJeu(id);
-        return jeu ? {
-          id,
-          nom: jeu.nom,
-          selections: selections as number,
-          categorie: jeu.categorie
-        } : null;
+        return jeu
+          ? {
+              id,
+              nom: jeu.nom,
+              selections: selections as number,
+              categorie: jeu.categorie,
+            }
+          : null;
       })
       .filter(Boolean)
       .sort((a: any, b: any) => b.selections - a.selections)
@@ -119,7 +126,7 @@ export class GestionnaireStatistiques {
       contributeurs: contributeurs.size,
       categories: categories.size,
       populariteMoyenne: this.calculerPopulariteMoyenne(),
-      topJeux: topJeux as any[]
+      topJeux: topJeux as any[],
     };
   }
 
@@ -141,20 +148,18 @@ export class GestionnaireStatistiques {
     const categories = Array.from(parCategorie.entries()).map(([cat, nb]) => ({
       categorie: cat,
       nombre: nb,
-      pourcentage: Math.round((nb / total) * 100)
+      pourcentage: Math.round((nb / total) * 100),
     }));
 
     // Répartition par nombre de joueurs
     const deuxJoueurs = jeux.filter(j => j.joueursMax === 2).length;
-    const petitGroupe = jeux.filter(j =>
-      j.joueursMax && j.joueursMax > 2 && j.joueursMax <= 4
+    const petitGroupe = jeux.filter(
+      j => j.joueursMax && j.joueursMax > 2 && j.joueursMax <= 4
     ).length;
-    const moyenGroupe = jeux.filter(j =>
-      j.joueursMax && j.joueursMax > 4 && j.joueursMax <= 8
+    const moyenGroupe = jeux.filter(
+      j => j.joueursMax && j.joueursMax > 4 && j.joueursMax <= 8
     ).length;
-    const grandGroupe = jeux.filter(j =>
-      j.joueursMax && j.joueursMax > 8
-    ).length;
+    const grandGroupe = jeux.filter(j => j.joueursMax && j.joueursMax > 8).length;
 
     return {
       total,
@@ -164,7 +169,7 @@ export class GestionnaireStatistiques {
       deuxJoueurs,
       petitGroupe,
       moyenGroupe,
-      grandGroupe
+      grandGroupe,
     };
   }
 
@@ -182,7 +187,7 @@ export class GestionnaireStatistiques {
         tendances.push({
           source: 'steam',
           jeux: jeuxSteam,
-          derniereMAJ: new Date()
+          derniereMAJ: new Date(),
         });
       }
     }
@@ -195,7 +200,7 @@ export class GestionnaireStatistiques {
         tendances.push({
           source: 'twitch',
           jeux: jeuxTwitch,
-          derniereMAJ: new Date()
+          derniereMAJ: new Date(),
         });
       }
     }
@@ -208,7 +213,7 @@ export class GestionnaireStatistiques {
         tendances.push({
           source: 'rawg',
           jeux: jeuxRAWG,
-          derniereMAJ: new Date()
+          derniereMAJ: new Date(),
         });
       }
     }
@@ -217,8 +222,10 @@ export class GestionnaireStatistiques {
   }
 
   private calculerPopulariteMoyenne(): number {
-    const total = Object.values(this.stats.jeuxSelectionnes)
-      .reduce((sum: number, count) => sum + (count as number), 0);
+    const total = Object.values(this.stats.jeuxSelectionnes).reduce(
+      (sum: number, count) => sum + (count as number),
+      0
+    );
     const nombre = Object.keys(this.stats.jeuxSelectionnes).length;
     return nombre > 0 ? Math.round((total / nombre) * 100) / 100 : 0;
   }
@@ -236,7 +243,3 @@ export class GestionnaireStatistiques {
     return 0;
   }
 }
-
-
-
-

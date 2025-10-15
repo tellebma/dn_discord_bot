@@ -8,27 +8,31 @@ export const data = new SlashCommandBuilder()
   .setName('addgame')
   .setDescription('Ajouter un jeu au pool')
   .addStringOption((option: any) =>
-    option.setName('nom')
-      .setDescription('Nom du jeu')
-      .setRequired(true))
+    option.setName('nom').setDescription('Nom du jeu').setRequired(true)
+  )
   .addStringOption((option: any) =>
-    option.setName('description')
-      .setDescription('Description du jeu')
-      .setRequired(false))
+    option.setName('description').setDescription('Description du jeu').setRequired(false)
+  )
   .addStringOption((option: any) =>
-    option.setName('categorie')
+    option
+      .setName('categorie')
       .setDescription('Catégorie du jeu (ex: Stratégie, Action, Party)')
-      .setRequired(false))
+      .setRequired(false)
+  )
   .addIntegerOption((option: any) =>
-    option.setName('joueursmin')
+    option
+      .setName('joueursmin')
       .setDescription('Nombre minimum de joueurs')
       .setMinValue(1)
-      .setRequired(false))
+      .setRequired(false)
+  )
   .addIntegerOption((option: any) =>
-    option.setName('joueursmax')
+    option
+      .setName('joueursmax')
       .setDescription('Nombre maximum de joueurs')
       .setMinValue(1)
-      .setRequired(false));
+      .setRequired(false)
+  );
 
 export async function execute(interaction: CommandInteraction) {
   const nom = interaction.options.get('nom')?.value as string;
@@ -41,19 +45,19 @@ export async function execute(interaction: CommandInteraction) {
   if (joueursMin && joueursMax && joueursMin > joueursMax) {
     await interaction.reply({
       content: '❌ Le nombre minimum de joueurs ne peut pas être supérieur au nombre maximum !',
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
 
   const gestionnaireJeux = GestionnairePoolJeux.getInstance();
-  
+
   // Vérifie si le jeu existe déjà
   const jeuExistant = gestionnaireJeux.trouverJeu(nom);
   if (jeuExistant) {
     await interaction.reply({
       content: `❌ Un jeu avec le nom "${nom}" existe déjà dans le pool !`,
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -65,13 +69,13 @@ export async function execute(interaction: CommandInteraction) {
     categorie,
     joueursMin,
     joueursMax,
-    ajoutePar: interaction.user.id
+    ajoutePar: interaction.user.id,
   });
 
   // Crée l'embed de confirmation
   const embed = new EmbedBuilder()
     .setTitle('✅ Jeu Ajouté avec Succès !')
-    .setColor(0x00FF00)
+    .setColor(0x00ff00)
     .addFields(
       { name: 'Nom', value: nouveauJeu.nom, inline: true },
       { name: 'Ajouté par', value: `<@${nouveauJeu.ajoutePar}>`, inline: true },
@@ -82,17 +86,18 @@ export async function execute(interaction: CommandInteraction) {
   if (nouveauJeu.description) {
     embed.addFields({ name: 'Description', value: nouveauJeu.description });
   }
-  
+
   if (nouveauJeu.categorie) {
     embed.addFields({ name: 'Catégorie', value: nouveauJeu.categorie, inline: true });
   }
 
   if (nouveauJeu.joueursMin || nouveauJeu.joueursMax) {
-    const joueurs = nouveauJeu.joueursMin && nouveauJeu.joueursMax 
-      ? `${nouveauJeu.joueursMin}-${nouveauJeu.joueursMax}` 
-      : nouveauJeu.joueursMin 
-      ? `${nouveauJeu.joueursMin}+` 
-      : `jusqu'à ${nouveauJeu.joueursMax}`;
+    const joueurs =
+      nouveauJeu.joueursMin && nouveauJeu.joueursMax
+        ? `${nouveauJeu.joueursMin}-${nouveauJeu.joueursMax}`
+        : nouveauJeu.joueursMin
+          ? `${nouveauJeu.joueursMin}+`
+          : `jusqu'à ${nouveauJeu.joueursMax}`;
     embed.addFields({ name: 'Joueurs', value: joueurs, inline: true });
   }
 

@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  CommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 
 /**
@@ -8,32 +13,31 @@ export const data = new SlashCommandBuilder()
   .setName('editgame')
   .setDescription('Modifier un jeu existant du pool')
   .addStringOption((option: any) =>
-    option.setName('jeu')
-      .setDescription('Jeu à modifier')
-      .setRequired(true)
-      .setAutocomplete(true))
+    option.setName('jeu').setDescription('Jeu à modifier').setRequired(true).setAutocomplete(true)
+  )
   .addStringOption((option: any) =>
-    option.setName('nouveau_nom')
-      .setDescription('Nouveau nom du jeu')
-      .setRequired(false))
+    option.setName('nouveau_nom').setDescription('Nouveau nom du jeu').setRequired(false)
+  )
   .addStringOption((option: any) =>
-    option.setName('description')
-      .setDescription('Nouvelle description')
-      .setRequired(false))
+    option.setName('description').setDescription('Nouvelle description').setRequired(false)
+  )
   .addStringOption((option: any) =>
-    option.setName('categorie')
-      .setDescription('Nouvelle catégorie')
-      .setRequired(false))
+    option.setName('categorie').setDescription('Nouvelle catégorie').setRequired(false)
+  )
   .addIntegerOption((option: any) =>
-    option.setName('joueursmin')
+    option
+      .setName('joueursmin')
       .setDescription('Nouveau nombre minimum de joueurs')
       .setMinValue(1)
-      .setRequired(false))
+      .setRequired(false)
+  )
   .addIntegerOption((option: any) =>
-    option.setName('joueursmax')
+    option
+      .setName('joueursmax')
       .setDescription('Nouveau nombre maximum de joueurs')
       .setMinValue(1)
-      .setRequired(false))
+      .setRequired(false)
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
 export async function execute(interaction: CommandInteraction) {
@@ -50,7 +54,7 @@ export async function execute(interaction: CommandInteraction) {
   if (!jeu) {
     await interaction.reply({
       content: `❌ Jeu "${entreeJeu}" introuvable !`,
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -59,7 +63,7 @@ export async function execute(interaction: CommandInteraction) {
   if (joueursMin && joueursMax && joueursMin > joueursMax) {
     await interaction.reply({
       content: '❌ Le nombre minimum ne peut pas être supérieur au maximum !',
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -75,7 +79,7 @@ export async function execute(interaction: CommandInteraction) {
   if (Object.keys(miseAJour).length === 0) {
     await interaction.reply({
       content: '❌ Aucune modification spécifiée ! Veuillez fournir au moins un champ à modifier.',
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -86,7 +90,7 @@ export async function execute(interaction: CommandInteraction) {
     const embed = new EmbedBuilder()
       .setTitle('✅ Jeu Modifié avec Succès')
       .setDescription(`Le jeu **${jeu.nom}** a été mis à jour.`)
-      .setColor(0x00FF00)
+      .setColor(0x00ff00)
       .addFields(
         { name: 'Nouveau Nom', value: jeuModifie.nom, inline: true },
         { name: 'Modifié par', value: `<@${interaction.user.id}>`, inline: true },
@@ -103,37 +107,40 @@ export async function execute(interaction: CommandInteraction) {
     }
 
     if (jeuModifie.joueursMin || jeuModifie.joueursMax) {
-      const joueurs = jeuModifie.joueursMin && jeuModifie.joueursMax 
-        ? `${jeuModifie.joueursMin}-${jeuModifie.joueursMax}` 
-        : jeuModifie.joueursMin 
-        ? `${jeuModifie.joueursMin}+` 
-        : `jusqu'à ${jeuModifie.joueursMax}`;
+      const joueurs =
+        jeuModifie.joueursMin && jeuModifie.joueursMax
+          ? `${jeuModifie.joueursMin}-${jeuModifie.joueursMax}`
+          : jeuModifie.joueursMin
+            ? `${jeuModifie.joueursMin}+`
+            : `jusqu'à ${jeuModifie.joueursMax}`;
       embed.addFields({ name: 'Joueurs', value: joueurs, inline: true });
     }
 
     // Afficher ce qui a changé
-    const modifications = Object.keys(miseAJour).map(key => {
-      const labels: any = {
-        nom: 'Nom',
-        description: 'Description',
-        categorie: 'Catégorie',
-        joueursMin: 'Joueurs Min',
-        joueursMax: 'Joueurs Max'
-      };
-      return `• ${labels[key] || key}`;
-    }).join('\n');
+    const modifications = Object.keys(miseAJour)
+      .map(key => {
+        const labels: any = {
+          nom: 'Nom',
+          description: 'Description',
+          categorie: 'Catégorie',
+          joueursMin: 'Joueurs Min',
+          joueursMax: 'Joueurs Max',
+        };
+        return `• ${labels[key] || key}`;
+      })
+      .join('\n');
 
     embed.addFields({
       name: '📝 Modifications Appliquées',
       value: modifications,
-      inline: false
+      inline: false,
     });
 
     await interaction.reply({ embeds: [embed] });
   } else {
     await interaction.reply({
       content: '❌ Erreur lors de la modification du jeu.',
-      ephemeral: true
+      ephemeral: true,
     });
   }
 }
@@ -147,20 +154,16 @@ export async function autocomplete(interaction: any) {
   const jeux = gestionnaireJeux.obtenirJeux();
 
   const filtered = jeux
-    .filter(jeu => 
-      jeu.nom.toLowerCase().includes(focusedValue.toLowerCase()) ||
-      jeu.id.includes(focusedValue)
+    .filter(
+      jeu =>
+        jeu.nom.toLowerCase().includes(focusedValue.toLowerCase()) || jeu.id.includes(focusedValue)
     )
     .slice(0, 25);
 
   await interaction.respond(
     filtered.map(jeu => ({
       name: `${jeu.nom}${jeu.categorie ? ` (${jeu.categorie})` : ''}`,
-      value: jeu.id
+      value: jeu.id,
     }))
   );
 }
-
-
-
-

@@ -19,7 +19,7 @@ export default {
     // Restaure et démarre le planificateur si un canal est configuré
     const stockageCanal = StockageCanal.getInstance();
     const canalId = stockageCanal.obtenirCanalId();
-    
+
     if (canalId) {
       console.log(`📅 Restauration du planificateur hebdomadaire pour le canal : ${canalId}`);
       const planificateur = PlanificateurHebdomadaire.getInstance(client);

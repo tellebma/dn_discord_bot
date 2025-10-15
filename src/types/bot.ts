@@ -49,7 +49,7 @@ export interface ValidationParametre {
 }
 
 /** Types de paramètres supportés */
-export type TypeParametre = 
+export type TypeParametre =
   | 'string'
   | 'integer'
   | 'number'

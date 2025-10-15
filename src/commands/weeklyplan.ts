@@ -13,7 +13,7 @@ export async function execute(interaction: CommandInteraction) {
   if (!interaction.channelId) {
     await interaction.reply({
       content: '❌ Cette commande doit être utilisée dans un canal !',
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -25,12 +25,12 @@ export async function execute(interaction: CommandInteraction) {
     const plan = await planificateur.planHebdomadaireManuel(interaction.channelId);
 
     await interaction.editReply({
-      content: `✅ Plan hebdomadaire généré pour la semaine : ${plan.semaine}\nSélectionné ${plan.jeux.length} jeu(x) et ${plan.activitesExtras.length} activité(s) extra(s).`
+      content: `✅ Plan hebdomadaire généré pour la semaine : ${plan.semaine}\nSélectionné ${plan.jeux.length} jeu(x) et ${plan.activitesExtras.length} activité(s) extra(s).`,
     });
   } catch (erreur) {
     console.error('Erreur lors de la génération du plan hebdomadaire :', erreur);
     await interaction.editReply({
-      content: '❌ Une erreur s\'est produite lors de la génération du plan hebdomadaire.'
+      content: "❌ Une erreur s'est produite lors de la génération du plan hebdomadaire.",
     });
   }
 }

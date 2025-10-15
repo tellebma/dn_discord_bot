@@ -18,9 +18,7 @@ export default {
     const latenceApi = Math.round(interaction.client.ws.ping);
 
     await interaction.editReply(
-      `🏓 Pong !\n` +
-      `📡 Latence : ${latence}ms\n` +
-      `💓 Latence API : ${latenceApi}ms`
+      `🏓 Pong !\n` + `📡 Latence : ${latence}ms\n` + `💓 Latence API : ${latenceApi}ms`
     );
   },
 };

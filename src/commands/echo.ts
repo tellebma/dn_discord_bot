@@ -16,10 +16,7 @@ const donneesCommande = new SlashCommandBuilder()
       .setMaxLength(2000)
   )
   .addBooleanOption((option: any) =>
-    option
-      .setName('ephemere')
-      .setDescription('Si la réponse doit être privée')
-      .setRequired(false)
+    option.setName('ephemere').setDescription('Si la réponse doit être privée').setRequired(false)
   );
 
 export default creerCommandeStandard({

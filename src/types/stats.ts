@@ -45,9 +45,9 @@ export interface TendanceExterne {
 export interface JeuTendance {
   nom: string;
   popularite: number;
-  spectateurs?: number;  // Pour Twitch
-  joueursActuels?: number;  // Pour Steam
-  note?: number;  // Pour RAWG/IGDB
+  spectateurs?: number; // Pour Twitch
+  joueursActuels?: number; // Pour Steam
+  note?: number; // Pour RAWG/IGDB
   plateforme?: string;
   imageUrl?: string;
 }
@@ -58,7 +58,3 @@ export interface DonneesStatistiques {
   votesCasts: { [idUtilisateur: string]: number };
   derniereMAJ: Date;
 }
-
-
-
-

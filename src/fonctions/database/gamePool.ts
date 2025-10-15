@@ -35,22 +35,23 @@ export class GestionnairePoolJeux {
         const donnees = fs.readFileSync(FICHIER_POOL_JEUX, 'utf-8');
         const parse = JSON.parse(donnees);
         return {
-          jeux: parse.games?.map((jeu: any) => ({
-            id: jeu.id,
-            nom: jeu.name,
-            description: jeu.description,
-            categorie: jeu.category,
-            joueursMin: jeu.minPlayers,
-            joueursMax: jeu.maxPlayers,
-            ajoutePar: jeu.addedBy,
-            ajouteLe: new Date(jeu.addedAt)
-          })) || []
+          jeux:
+            parse.games?.map((jeu: any) => ({
+              id: jeu.id,
+              nom: jeu.name,
+              description: jeu.description,
+              categorie: jeu.category,
+              joueursMin: jeu.minPlayers,
+              joueursMax: jeu.maxPlayers,
+              ajoutePar: jeu.addedBy,
+              ajouteLe: new Date(jeu.addedAt),
+            })) || [],
         };
       }
     } catch (erreur) {
       console.error('Erreur lors du chargement du pool de jeux :', erreur);
     }
-    
+
     return { jeux: [] };
   }
 
@@ -73,8 +74,8 @@ export class GestionnairePoolJeux {
           minPlayers: jeu.joueursMin,
           maxPlayers: jeu.joueursMax,
           addedBy: jeu.ajoutePar,
-          addedAt: jeu.ajouteLe
-        }))
+          addedAt: jeu.ajouteLe,
+        })),
       };
       fs.writeFileSync(FICHIER_POOL_JEUX, JSON.stringify(donnees, null, 2));
     } catch (erreur) {
@@ -90,9 +91,9 @@ export class GestionnairePoolJeux {
     const nouveauJeu: Jeu = {
       ...jeu,
       id: Date.now().toString(),
-      ajouteLe: new Date()
+      ajouteLe: new Date(),
     };
-    
+
     this.poolJeux.jeux.push(nouveauJeu);
     this.sauvegarderPoolJeux();
     return nouveauJeu;
@@ -105,7 +106,7 @@ export class GestionnairePoolJeux {
   public supprimerJeu(idJeu: string): boolean {
     const longueurInitiale = this.poolJeux.jeux.length;
     this.poolJeux.jeux = this.poolJeux.jeux.filter(jeu => jeu.id !== idJeu);
-    
+
     if (this.poolJeux.jeux.length < longueurInitiale) {
       this.sauvegarderPoolJeux();
       return true;
@@ -152,9 +153,8 @@ export class GestionnairePoolJeux {
    * Recherche un jeu par nom ou ID
    */
   public trouverJeu(nomOuId: string): Jeu | undefined {
-    return this.poolJeux.jeux.find(jeu => 
-      jeu.id === nomOuId || 
-      jeu.nom.toLowerCase().includes(nomOuId.toLowerCase())
+    return this.poolJeux.jeux.find(
+      jeu => jeu.id === nomOuId || jeu.nom.toLowerCase().includes(nomOuId.toLowerCase())
     );
   }
 }

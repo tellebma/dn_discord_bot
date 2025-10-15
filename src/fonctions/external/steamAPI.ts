@@ -46,8 +46,8 @@ export class ClientSteam {
     try {
       // Steam n'a pas d'endpoint "trending" direct
       // On utilise l'endpoint des jeux les plus joués via steamcharts
-      const tendances = await this.obtenirTop Jeux(limite);
-      
+      const tendances = await this.obtenirTopJeux(limite);
+
       this.mettreEnCache(cacheKey, tendances);
       return tendances;
     } catch (erreur) {
@@ -98,7 +98,7 @@ export class ClientSteam {
           popularite: jeu.ccu || 0, // Concurrent users
           joueursActuels: jeu.ccu,
           plateforme: 'PC (Steam)',
-          imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${jeu.appid}/header.jpg`
+          imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${jeu.appid}/header.jpg`,
         }));
 
       return jeux;
@@ -125,11 +125,7 @@ export class ClientSteam {
   private mettreEnCache(key: string, data: any): void {
     this.cache.set(key, {
       data,
-      expiration: Date.now() + this.cacheDuration
+      expiration: Date.now() + this.cacheDuration,
     });
   }
 }
-
-
-
-

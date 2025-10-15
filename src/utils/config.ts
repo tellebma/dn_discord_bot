@@ -14,15 +14,17 @@ export function validerEnvironnement(): void {
   const manquantes = variablesEnvRequises.filter(nomVar => !process.env[nomVar]);
 
   if (manquantes.length > 0) {
-    console.error('❌ Variables d\'environnement requises manquantes :');
+    console.error("❌ Variables d'environnement requises manquantes :");
     manquantes.forEach(nomVar => {
       console.error(`   - ${nomVar}`);
     });
-    console.error('\nVeuillez vérifier votre fichier .env et assurez-vous que toutes les variables requises sont définies.');
+    console.error(
+      '\nVeuillez vérifier votre fichier .env et assurez-vous que toutes les variables requises sont définies.'
+    );
     process.exit(1);
   }
 
-  console.log('✅ Variables d\'environnement validées avec succès');
+  console.log("✅ Variables d'environnement validées avec succès");
 }
 
 /**

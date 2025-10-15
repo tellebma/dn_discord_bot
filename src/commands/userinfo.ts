@@ -11,7 +11,7 @@ const donneesCommande = new SlashCommandBuilder()
   .addUserOption((option: any) =>
     option
       .setName('cible')
-      .setDescription('L\'utilisateur dont obtenir les informations')
+      .setDescription("L'utilisateur dont obtenir les informations")
       .setRequired(false)
   );
 
@@ -26,7 +26,7 @@ export default creerCommandeStandard({
     {
       type: 'user',
       nom: 'cible',
-      description: 'L\'utilisateur dont obtenir les informations',
+      description: "L'utilisateur dont obtenir les informations",
       requis: false,
     },
   ],
@@ -35,14 +35,15 @@ export default creerCommandeStandard({
     params: Record<string, any>
   ): Promise<void> => {
     const utilisateurCible: User = (params.cible as User) || interaction.user;
-    const membre: GuildMember | null = interaction.guild?.members.cache.get(utilisateurCible.id) ?? null;
+    const membre: GuildMember | null =
+      interaction.guild?.members.cache.get(utilisateurCible.id) ?? null;
 
     const embed = new EmbedBuilder()
       .setTitle(`Informations Utilisateur - ${utilisateurCible.tag}`)
       .setThumbnail(utilisateurCible.displayAvatarURL({ size: 256 }))
       .setColor(membre?.displayHexColor ?? '#0099ff')
       .addFields(
-        { name: '👤 Nom d\'utilisateur', value: utilisateurCible.tag, inline: true },
+        { name: "👤 Nom d'utilisateur", value: utilisateurCible.tag, inline: true },
         { name: '🆔 ID Utilisateur', value: utilisateurCible.id, inline: true },
         {
           name: '📅 Compte Créé le',
@@ -52,10 +53,11 @@ export default creerCommandeStandard({
       );
 
     if (membre) {
-      const roles = membre.roles.cache
-        .filter((role: any) => role.name !== '@everyone')
-        .map((role: any) => role.toString())
-        .join(', ') || 'Aucun';
+      const roles =
+        membre.roles.cache
+          .filter((role: any) => role.name !== '@everyone')
+          .map((role: any) => role.toString())
+          .join(', ') || 'Aucun';
 
       embed.addFields(
         {

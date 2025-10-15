@@ -1,4 +1,12 @@
-import { Client, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ButtonInteraction } from 'discord.js';
+import {
+  Client,
+  TextChannel,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ButtonInteraction,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 import { GestionnaireStatistiques } from '@/fonctions/analytics/statsManager';
 import { PlanificateurHebdomadaire } from '@/fonctions/scheduler/weeklyPlanner';
@@ -62,7 +70,7 @@ export class GestionnaireVotes {
       dateFin,
       statut: 'en_cours',
       planGenere: false,
-      creerPar
+      creerPar,
     };
 
     // Initialiser les votes pour chaque jeu
@@ -70,19 +78,22 @@ export class GestionnaireVotes {
       session.votes.set(jeu.id, {
         idJeu: jeu.id,
         votesUtilisateurs: [],
-        score: 0
+        score: 0,
       });
     });
 
     // Créer le message de vote
-    const canal = await this.client.channels.fetch(canalId) as TextChannel;
-    const embed = this.creerEmbedVote(session, jeux.map(j => ({ id: j.id, nom: j.nom, description: j.description, categorie: j.categorie })));
+    const canal = (await this.client.channels.fetch(canalId)) as TextChannel;
+    const embed = this.creerEmbedVote(
+      session,
+      jeux.map(j => ({ id: j.id, nom: j.nom, description: j.description, categorie: j.categorie }))
+    );
     const buttons = this.creerBoutonsVote(jeux);
 
     const message = await canal.send({
       content: '@here 🗳️ **Nouveau vote pour la semaine prochaine !**',
       embeds: [embed],
-      components: buttons
+      components: buttons,
     });
 
     session.messageId = message.id;
@@ -90,9 +101,12 @@ export class GestionnaireVotes {
     this.sauvegarderVotes();
 
     // Programmer la fin du vote
-    setTimeout(() => {
-      this.terminerSessionVote(session.id);
-    }, dureeHeures * 60 * 60 * 1000);
+    setTimeout(
+      () => {
+        this.terminerSessionVote(session.id);
+      },
+      dureeHeures * 60 * 60 * 1000
+    );
 
     // Configurer les rappels
     this.configurerRappel(session);
@@ -104,11 +118,7 @@ export class GestionnaireVotes {
   /**
    * Gère un vote d'utilisateur (anonyme)
    */
-  public async gererVote(
-    sessionId: string,
-    idJeu: string,
-    userId: string
-  ): Promise<boolean> {
+  public async gererVote(sessionId: string, idJeu: string, userId: string): Promise<boolean> {
     const session = this.sessions.get(sessionId);
     if (!session || session.statut !== 'en_cours') {
       return false;
@@ -146,14 +156,18 @@ export class GestionnaireVotes {
    */
   private async mettreAJourAffichageVote(session: SessionVote): Promise<void> {
     try {
-      const canal = await this.client.channels.fetch(session.canalId) as TextChannel;
+      const canal = (await this.client.channels.fetch(session.canalId)) as TextChannel;
       const message = await canal.messages.fetch(session.messageId);
 
       const gestionnaireJeux = GestionnairePoolJeux.getInstance();
-      const jeux = session.jeuxProposes.map(id => {
-        const jeu = gestionnaireJeux.trouverJeu(id);
-        return jeu ? { id, nom: jeu.nom, description: jeu.description, categorie: jeu.categorie } : null;
-      }).filter(Boolean);
+      const jeux = session.jeuxProposes
+        .map(id => {
+          const jeu = gestionnaireJeux.trouverJeu(id);
+          return jeu
+            ? { id, nom: jeu.nom, description: jeu.description, categorie: jeu.categorie }
+            : null;
+        })
+        .filter(Boolean);
 
       const embed = this.creerEmbedVote(session, jeux as any[]);
       await message.edit({ embeds: [embed] });
@@ -166,52 +180,58 @@ export class GestionnaireVotes {
    * Crée l'embed de vote avec scores anonymes
    */
   private creerEmbedVote(session: SessionVote, jeux: any[]): EmbedBuilder {
-    const totalVotes = Array.from(session.votes.values())
-      .reduce((sum, v) => sum + v.score, 0);
+    const totalVotes = Array.from(session.votes.values()).reduce((sum, v) => sum + v.score, 0);
 
     const embed = new EmbedBuilder()
       .setTitle('🗳️ Vote pour le Plan Hebdomadaire')
       .setDescription(
         `**Semaine :** ${session.semaine}\n` +
-        `**Fin du vote :** <t:${Math.floor(session.dateFin.getTime() / 1000)}:R>\n\n` +
-        `Votez pour vos jeux préférés ! Les **5 jeux les plus votés** seront inclus dans le plan de la semaine.\n\n` +
-        `🔒 **Votes anonymes** - Personne ne voit qui vote pour quoi.\n` +
-        `📊 ${totalVotes} vote(s) au total`
+          `**Fin du vote :** <t:${Math.floor(session.dateFin.getTime() / 1000)}:R>\n\n` +
+          `Votez pour vos jeux préférés ! Les **5 jeux les plus votés** seront inclus dans le plan de la semaine.\n\n` +
+          `🔒 **Votes anonymes** - Personne ne voit qui vote pour quoi.\n` +
+          `📊 ${totalVotes} vote(s) au total`
       )
-      .setColor(0x9966FF);
+      .setColor(0x9966ff);
 
     // Trier les jeux par score décroissant
-    const jeuxTries = jeux.map(jeu => {
-      const vote = session.votes.get(jeu.id);
-      return {
-        ...jeu,
-        score: vote?.score || 0
-      };
-    }).sort((a, b) => b.score - a.score);
+    const jeuxTries = jeux
+      .map(jeu => {
+        const vote = session.votes.get(jeu.id);
+        return {
+          ...jeu,
+          score: vote?.score || 0,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
 
     // Afficher les jeux avec barres de progression
-    const jeuxText = jeuxTries.map((jeu, index) => {
-      const pourcentage = totalVotes > 0 ? Math.round((jeu.score / totalVotes) * 100) : 0;
-      const barres = this.creerBarreProgression(pourcentage);
-      
-      let text = `${index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index + 1}.`} **${jeu.nom}**`;
-      if (jeu.categorie) text += ` _(${jeu.categorie})_`;
-      text += `\n${barres} ${jeu.score} vote(s) - ${pourcentage}%`;
-      
-      return text;
-    }).join('\n\n');
+    const jeuxText = jeuxTries
+      .map((jeu, index) => {
+        const pourcentage = totalVotes > 0 ? Math.round((jeu.score / totalVotes) * 100) : 0;
+        const barres = this.creerBarreProgression(pourcentage);
+
+        let text = `${index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index + 1}.`} **${jeu.nom}**`;
+        if (jeu.categorie) text += ` _(${jeu.categorie})_`;
+        text += `\n${barres} ${jeu.score} vote(s) - ${pourcentage}%`;
+
+        return text;
+      })
+      .join('\n\n');
 
     embed.addFields({
       name: `🎮 Jeux Proposés (${jeux.length})`,
       value: jeuxText || 'Chargement...',
-      inline: false
+      inline: false,
     });
 
-    const topActuel = jeuxTries.slice(0, 5).map(j => j.nom).join(', ');
+    const topActuel = jeuxTries
+      .slice(0, 5)
+      .map(j => j.nom)
+      .join(', ');
     embed.addFields({
       name: '🏆 Top 5 Actuel',
       value: topActuel || 'En attente de votes',
-      inline: false
+      inline: false,
     });
 
     return embed;
@@ -231,7 +251,7 @@ export class GestionnaireVotes {
    */
   private creerBoutonsVote(jeux: any[]): ActionRowBuilder[] {
     const rows: ActionRowBuilder[] = [];
-    
+
     // Maximum 5 boutons par row, maximum 5 rows
     for (let i = 0; i < Math.min(jeux.length, 25); i += 5) {
       const row = new ActionRowBuilder();
@@ -268,18 +288,19 @@ export class GestionnaireVotes {
 
     // Calculer les résultats
     const resultats = this.calculerResultats(session);
-    
+
     // Sélectionner les top 5
-    const top5 = resultats
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+    const top5 = resultats.sort((a, b) => b.score - a.score).slice(0, 5);
 
     // Envoyer les résultats
     await this.envoyerResultatsVote(session, resultats, top5);
 
     // Générer le plan avec les jeux sélectionnés
     if (!session.planGenere && top5.length > 0) {
-      await this.genererPlanAvecVotes(session.canalId, top5.map(r => r.idJeu));
+      await this.genererPlanAvecVotes(
+        session.canalId,
+        top5.map(r => r.idJeu)
+      );
       session.planGenere = true;
     }
 
@@ -291,8 +312,10 @@ export class GestionnaireVotes {
    */
   private calculerResultats(session: SessionVote): ResultatVote[] {
     const gestionnaireJeux = GestionnairePoolJeux.getInstance();
-    const totalVotes = Array.from(session.votes.values())
-      .reduce((sum, v) => sum + v.votesUtilisateurs.length, 0);
+    const totalVotes = Array.from(session.votes.values()).reduce(
+      (sum, v) => sum + v.votesUtilisateurs.length,
+      0
+    );
 
     return Array.from(session.votes.entries()).map(([idJeu, vote]) => {
       const jeu = gestionnaireJeux.trouverJeu(idJeu);
@@ -301,7 +324,8 @@ export class GestionnaireVotes {
         nomJeu: jeu?.nom || 'Jeu inconnu',
         score: vote.score,
         nbVotes: vote.votesUtilisateurs.length,
-        pourcentage: totalVotes > 0 ? Math.round((vote.votesUtilisateurs.length / totalVotes) * 100) : 0
+        pourcentage:
+          totalVotes > 0 ? Math.round((vote.votesUtilisateurs.length / totalVotes) * 100) : 0,
       };
     });
   }
@@ -315,27 +339,29 @@ export class GestionnaireVotes {
     top5: ResultatVote[]
   ): Promise<void> {
     try {
-      const canal = await this.client.channels.fetch(session.canalId) as TextChannel;
+      const canal = (await this.client.channels.fetch(session.canalId)) as TextChannel;
 
       const embed = new EmbedBuilder()
         .setTitle('📊 Résultats du Vote Hebdomadaire')
         .setDescription(
           `**Semaine :** ${session.semaine}\n` +
-          `**Total des votes :** ${resultats.reduce((s, r) => s + r.nbVotes, 0)}\n\n` +
-          `Les **5 jeux les plus votés** seront inclus dans le plan de cette semaine !`
+            `**Total des votes :** ${resultats.reduce((s, r) => s + r.nbVotes, 0)}\n\n` +
+            `Les **5 jeux les plus votés** seront inclus dans le plan de cette semaine !`
         )
-        .setColor(0x00FF00);
+        .setColor(0x00ff00);
 
       // Afficher le top 5
-      const top5Text = top5.map((r, i) => {
-        const emoji = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i];
-        return `${emoji} **${r.nomJeu}** - ${r.nbVotes} vote(s) (${r.pourcentage}%)`;
-      }).join('\n');
+      const top5Text = top5
+        .map((r, i) => {
+          const emoji = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'][i];
+          return `${emoji} **${r.nomJeu}** - ${r.nbVotes} vote(s) (${r.pourcentage}%)`;
+        })
+        .join('\n');
 
       embed.addFields({
         name: '🏆 Top 5 - Jeux Sélectionnés',
         value: top5Text,
-        inline: false
+        inline: false,
       });
 
       // Afficher tous les résultats (sans ordre alphabétique pour masquer le classement complet)
@@ -347,7 +373,7 @@ export class GestionnaireVotes {
       embed.addFields({
         name: '📊 Tous les Résultats (ordre aléatoire)',
         value: tousResultats,
-        inline: false
+        inline: false,
       });
 
       embed.setFooter({ text: '🔒 Vote anonyme - Merci pour votre participation !' });
@@ -362,7 +388,10 @@ export class GestionnaireVotes {
   /**
    * Génère un plan hebdomadaire avec les jeux votés
    */
-  private async genererPlanAvecVotes(canalId: string, idsJeuxSelectionnes: string[]): Promise<void> {
+  private async genererPlanAvecVotes(
+    canalId: string,
+    idsJeuxSelectionnes: string[]
+  ): Promise<void> {
     try {
       const planificateur = PlanificateurHebdomadaire.getInstance(this.client);
       // Le plan sera généré avec les jeux sélectionnés par vote
@@ -381,7 +410,7 @@ export class GestionnaireVotes {
       sessionId: session.id,
       dernierRappel: new Date(),
       prochainRappel: new Date(session.dateFin.getTime() - 6 * 60 * 60 * 1000), // 6h avant la fin
-      rappelsEnvoyes: 0
+      rappelsEnvoyes: 0,
     };
 
     this.rappels.set(session.id, rappel);
@@ -393,9 +422,12 @@ export class GestionnaireVotes {
    */
   private demarrerRappelsAutomatiques(): void {
     // Vérifier toutes les heures s'il faut envoyer des rappels
-    setInterval(() => {
-      this.verifierEtEnvoyerRappels();
-    }, 60 * 60 * 1000); // Toutes les heures
+    setInterval(
+      () => {
+        this.verifierEtEnvoyerRappels();
+      },
+      60 * 60 * 1000
+    ); // Toutes les heures
 
     console.log('🔔 Système de rappels de votes démarré');
   }
@@ -408,7 +440,7 @@ export class GestionnaireVotes {
 
     for (const [sessionId, rappel] of this.rappels.entries()) {
       const session = this.sessions.get(sessionId);
-      
+
       if (!session || session.statut !== 'en_cours') {
         continue;
       }
@@ -428,25 +460,27 @@ export class GestionnaireVotes {
    */
   private async envoyerRappelVote(session: SessionVote): Promise<void> {
     try {
-      const canal = await this.client.channels.fetch(session.canalId) as TextChannel;
+      const canal = (await this.client.channels.fetch(session.canalId)) as TextChannel;
 
-      const totalVotes = Array.from(session.votes.values())
-        .reduce((sum, v) => sum + v.votesUtilisateurs.length, 0);
+      const totalVotes = Array.from(session.votes.values()).reduce(
+        (sum, v) => sum + v.votesUtilisateurs.length,
+        0
+      );
 
       const embed = new EmbedBuilder()
-        .setTitle('🔔 Rappel : N\'oubliez pas de voter !')
+        .setTitle("🔔 Rappel : N'oubliez pas de voter !")
         .setDescription(
           `Le vote pour la semaine **${session.semaine}** se termine bientôt !\n\n` +
-          `⏰ Fin du vote : <t:${Math.floor(session.dateFin.getTime() / 1000)}:R>\n` +
-          `📊 ${totalVotes} vote(s) reçu(s)\n\n` +
-          `Votez pour vos jeux préférés en cliquant sur les boutons ci-dessus ! ⬆️`
+            `⏰ Fin du vote : <t:${Math.floor(session.dateFin.getTime() / 1000)}:R>\n` +
+            `📊 ${totalVotes} vote(s) reçu(s)\n\n` +
+            `Votez pour vos jeux préférés en cliquant sur les boutons ci-dessus ! ⬆️`
         )
-        .setColor(0xFFAA00)
+        .setColor(0xffaa00)
         .setFooter({ text: '🔒 Votre vote est anonyme' });
 
-      await canal.send({ 
+      await canal.send({
         content: '@here',
-        embeds: [embed] 
+        embeds: [embed],
       });
 
       console.log(`🔔 Rappel envoyé pour la session ${session.id}`);
@@ -480,14 +514,14 @@ export class GestionnaireVotes {
     this.sauvegarderVotes();
 
     try {
-      const canal = await this.client.channels.fetch(session.canalId) as TextChannel;
+      const canal = (await this.client.channels.fetch(session.canalId)) as TextChannel;
       const embed = new EmbedBuilder()
         .setTitle('❌ Vote Annulé')
         .setDescription(
           `Le vote pour la semaine **${session.semaine}** a été annulé.\n\n` +
-          (raison ? `**Raison :** ${raison}` : '')
+            (raison ? `**Raison :** ${raison}` : '')
         )
-        .setColor(0xFF0000);
+        .setColor(0xff0000);
 
       await canal.send({ embeds: [embed] });
     } catch (erreur) {
@@ -513,13 +547,13 @@ export class GestionnaireVotes {
     try {
       if (fs.existsSync(FICHIER_VOTES)) {
         const donnees = JSON.parse(fs.readFileSync(FICHIER_VOTES, 'utf-8'));
-        
+
         donnees.forEach((sessionData: any) => {
           const session: SessionVote = {
             ...sessionData,
             dateDebut: new Date(sessionData.dateDebut),
             dateFin: new Date(sessionData.dateFin),
-            votes: new Map(Object.entries(sessionData.votes))
+            votes: new Map(Object.entries(sessionData.votes)),
           };
           this.sessions.set(session.id, session);
         });
@@ -540,7 +574,7 @@ export class GestionnaireVotes {
 
       const sessions = Array.from(this.sessions.values()).map(session => ({
         ...session,
-        votes: Object.fromEntries(session.votes)
+        votes: Object.fromEntries(session.votes),
       }));
 
       fs.writeFileSync(FICHIER_VOTES, JSON.stringify(sessions, null, 2));
@@ -553,12 +587,12 @@ export class GestionnaireVotes {
     try {
       if (fs.existsSync(FICHIER_RAPPELS)) {
         const donnees = JSON.parse(fs.readFileSync(FICHIER_RAPPELS, 'utf-8'));
-        
+
         donnees.forEach((rappelData: any) => {
           this.rappels.set(rappelData.sessionId, {
             ...rappelData,
             dernierRappel: new Date(rappelData.dernierRappel),
-            prochainRappel: new Date(rappelData.prochainRappel)
+            prochainRappel: new Date(rappelData.prochainRappel),
           });
         });
       }
@@ -581,7 +615,3 @@ export class GestionnaireVotes {
     }
   }
 }
-
-
-
-

@@ -50,9 +50,7 @@ export class CommandGenerator {
     permissions: string[],
     cooldown: number
   ): string {
-    const paramsArray = parameters
-      .map(p => JSON.stringify(p, null, 4))
-      .join(',\\n        ');
+    const paramsArray = parameters.map(p => JSON.stringify(p, null, 4)).join(',\\n        ');
     const permsArray = permissions.map(p => `'${p}'`).join(', ');
 
     return `import { SlashCommandBuilder } from 'discord.js';

@@ -50,18 +50,18 @@ export class ClientTwitch {
       const params = new URLSearchParams({
         client_id: this.clientId!,
         client_secret: this.clientSecret!,
-        grant_type: 'client_credentials'
+        grant_type: 'client_credentials',
       });
 
       const response = await fetch(`${TWITCH_AUTH_URL}?${params}`, {
-        method: 'POST'
+        method: 'POST',
       });
 
       const data = await response.json();
 
       if (data.access_token) {
         this.accessToken = data.access_token;
-        this.tokenExpiration = Date.now() + (data.expires_in * 1000);
+        this.tokenExpiration = Date.now() + data.expires_in * 1000;
         console.log('✅ Token Twitch obtenu avec succès');
         return this.accessToken;
       }
@@ -86,8 +86,8 @@ export class ClientTwitch {
       const response = await fetch(`${TWITCH_API_BASE}${endpoint}`, {
         headers: {
           'Client-ID': this.clientId,
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -116,7 +116,7 @@ export class ClientTwitch {
 
     try {
       const data = await this.requeteAPI(`/games/top?first=${limite}`);
-      
+
       if (!data || !data.data) {
         return [];
       }
@@ -130,9 +130,7 @@ export class ClientTwitch {
             popularite: streams.totalSpectateurs,
             spectateurs: streams.totalSpectateurs,
             plateforme: 'Multi-plateformes',
-            imageUrl: jeu.box_art_url
-              .replace('{width}', '285')
-              .replace('{height}', '380')
+            imageUrl: jeu.box_art_url.replace('{width}', '285').replace('{height}', '380'),
           };
         })
       );
@@ -148,19 +146,24 @@ export class ClientTwitch {
   /**
    * Récupère le nombre total de spectateurs pour un jeu
    */
-  private async obtenirNombreSpectateurs(gameId: string): Promise<{ totalSpectateurs: number; nbStreams: number }> {
+  private async obtenirNombreSpectateurs(
+    gameId: string
+  ): Promise<{ totalSpectateurs: number; nbStreams: number }> {
     try {
       const data = await this.requeteAPI(`/streams?game_id=${gameId}&first=100`);
-      
+
       if (!data || !data.data) {
         return { totalSpectateurs: 0, nbStreams: 0 };
       }
 
-      const totalSpectateurs = data.data.reduce((sum: number, stream: any) => sum + stream.viewer_count, 0);
-      
+      const totalSpectateurs = data.data.reduce(
+        (sum: number, stream: any) => sum + stream.viewer_count,
+        0
+      );
+
       return {
         totalSpectateurs,
-        nbStreams: data.data.length
+        nbStreams: data.data.length,
       };
     } catch (erreur) {
       return { totalSpectateurs: 0, nbStreams: 0 };
@@ -176,8 +179,10 @@ export class ClientTwitch {
     }
 
     try {
-      const data = await this.requeteAPI(`/search/categories?query=${encodeURIComponent(nomJeu)}&first=1`);
-      
+      const data = await this.requeteAPI(
+        `/search/categories?query=${encodeURIComponent(nomJeu)}&first=1`
+      );
+
       if (data && data.data && data.data.length > 0) {
         return data.data[0];
       }
@@ -206,11 +211,7 @@ export class ClientTwitch {
   private mettreEnCache(key: string, data: any): void {
     this.cache.set(key, {
       data,
-      expiration: Date.now() + this.cacheDuration
+      expiration: Date.now() + this.cacheDuration,
     });
   }
 }
-
-
-
-

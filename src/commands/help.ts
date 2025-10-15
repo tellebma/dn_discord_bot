@@ -5,9 +5,10 @@ import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.j
  */
 export const data = new SlashCommandBuilder()
   .setName('help')
-  .setDescription('Affiche l\'aide et les commandes disponibles')
+  .setDescription("Affiche l'aide et les commandes disponibles")
   .addStringOption(option =>
-    option.setName('categorie')
+    option
+      .setName('categorie')
       .setDescription('Catégorie spécifique à afficher')
       .setRequired(false)
       .addChoices(
@@ -15,7 +16,8 @@ export const data = new SlashCommandBuilder()
         { name: '📅 Gestion des Activités', value: 'activites' },
         { name: '🗓️ Planification', value: 'planification' },
         { name: '🛠️ Utilitaires', value: 'utilitaires' }
-      ));
+      )
+  );
 
 export async function execute(interaction: CommandInteraction) {
   const categorie = interaction.options.get('categorie')?.value as string;
@@ -28,80 +30,80 @@ export async function execute(interaction: CommandInteraction) {
 
   // Embed principal d'aide
   const embedPrincipal = new EmbedBuilder()
-    .setTitle('🤖 Bot Discord Divnum - Guide d\'Utilisation')
+    .setTitle("🤖 Bot Discord Divnum - Guide d'Utilisation")
     .setDescription(
       '**Bienvenue !** Je suis un bot pour gérer vos jeux et activités hebdomadaires.\n\n' +
-      '🎮 **Gérez votre pool de jeux**\n' +
-      '📅 **Planifiez des activités extras**\n' +
-      '🗓️ **Recevez des plans hebdomadaires automatiques**\n\n' +
-      'Utilisez les commandes ci-dessous ou `/help categorie` pour plus de détails.'
+        '🎮 **Gérez votre pool de jeux**\n' +
+        '📅 **Planifiez des activités extras**\n' +
+        '🗓️ **Recevez des plans hebdomadaires automatiques**\n\n' +
+        'Utilisez les commandes ci-dessous ou `/help categorie` pour plus de détails.'
     )
-    .setColor(0x9966FF)
+    .setColor(0x9966ff)
     .setTimestamp()
-    .setFooter({ text: 'Utilisez /help categorie:<nom> pour plus d\'informations' });
+    .setFooter({ text: "Utilisez /help categorie:<nom> pour plus d'informations" });
 
   // Section Gestion des Jeux
   embedPrincipal.addFields({
     name: '🎮 Gestion des Jeux',
-    value: 
+    value:
       '`/addgame` - Ajouter un jeu au pool\n' +
       '`/gamepool` - Afficher tous les jeux disponibles\n' +
       '\n*Pour plus de détails : `/help categorie:jeux`*',
-    inline: false
+    inline: false,
   });
 
   // Section Gestion des Activités
   embedPrincipal.addFields({
     name: '📅 Gestion des Activités',
-    value: 
+    value:
       '`/addactivity` - Ajouter une activité hebdomadaire\n' +
       '`/activities` - Afficher toutes les activités\n' +
       '`/manageactivity` - Gérer les activités (Admin)\n' +
       '\n*Pour plus de détails : `/help categorie:activites`*',
-    inline: false
+    inline: false,
   });
 
   // Section Planification
   embedPrincipal.addFields({
     name: '🗓️ Planification Hebdomadaire',
-    value: 
+    value:
       '`/weeklyplan` - Générer un plan manuel (Admin)\n' +
       '`/setchannel` - Configurer les plans automatiques (Admin)\n' +
       '\n*Plans automatiques : Chaque lundi à 10h*\n' +
       '*Pour plus de détails : `/help categorie:planification`*',
-    inline: false
+    inline: false,
   });
 
   // Section Utilitaires
   embedPrincipal.addFields({
     name: '🛠️ Utilitaires',
-    value: 
+    value:
       '`/ping` - Vérifier la latence du bot\n' +
       '`/serverinfo` - Informations du serveur\n' +
-      '`/userinfo` - Informations d\'un utilisateur\n' +
+      "`/userinfo` - Informations d'un utilisateur\n" +
       '`/echo` - Répéter un message\n' +
       '\n*Pour plus de détails : `/help categorie:utilitaires`*',
-    inline: false
+    inline: false,
   });
 
   // Section Permissions
   embedPrincipal.addFields({
     name: '🔐 Permissions',
-    value: 
+    value:
       '**Tous les membres :** Ajouter des jeux/activités, voir les listes\n' +
       '**Administrateurs :** Gérer les activités, configurer les plans automatiques\n' +
       '\n*Les commandes Admin nécessitent la permission "Gérer les messages"*',
-    inline: false
+    inline: false,
   });
 
   // Section Liens Utiles
   embedPrincipal.addFields({
     name: '🔗 Liens Utiles',
-    value: 
+    value:
       '📚 [Documentation Complète](https://github.com/votre-repo)\n' +
       '🐛 [Signaler un Bug](https://github.com/votre-repo/issues)\n' +
       '💡 [Suggérer une Fonctionnalité](https://github.com/votre-repo/issues)',
-    inline: false
+    inline: false,
   });
 
   await interaction.reply({ embeds: [embedPrincipal], ephemeral: true });
@@ -127,9 +129,9 @@ async function envoyerAideCategorie(interaction: CommandInteraction, categorie: 
       embed = creerAideUtilitaires();
       break;
     default:
-      await interaction.reply({ 
-        content: '❌ Catégorie inconnue !', 
-        ephemeral: true 
+      await interaction.reply({
+        content: '❌ Catégorie inconnue !',
+        ephemeral: true,
       });
       return;
   }
@@ -144,11 +146,11 @@ function creerAideJeux(): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle('🎮 Gestion des Jeux')
     .setDescription('Gérez votre collection de jeux disponibles pour les sessions de jeu.')
-    .setColor(0x00FF00)
+    .setColor(0x00ff00)
     .addFields(
       {
         name: '📝 /addgame',
-        value: 
+        value:
           '**Description :** Ajoute un nouveau jeu au pool\n\n' +
           '**Options :**\n' +
           '• `nom` (requis) - Nom du jeu\n' +
@@ -158,11 +160,11 @@ function creerAideJeux(): EmbedBuilder {
           '• `joueursmax` (optionnel) - Nombre maximum de joueurs\n\n' +
           '**Exemple :**\n' +
           '```/addgame nom:"Among Us" description:"Jeu de déduction" categorie:"Party" joueursmin:4 joueursmax:10```',
-        inline: false
+        inline: false,
       },
       {
         name: '📋 /gamepool',
-        value: 
+        value:
           '**Description :** Affiche la liste complète des jeux disponibles\n\n' +
           '**Informations affichées :**\n' +
           '• Nom et description du jeu\n' +
@@ -171,16 +173,16 @@ function creerAideJeux(): EmbedBuilder {
           '• Qui a ajouté le jeu\n\n' +
           '**Exemple :**\n' +
           '```/gamepool```',
-        inline: false
+        inline: false,
       },
       {
         name: '💡 Conseils',
-        value: 
+        value:
           '• Les noms de jeux doivent être uniques\n' +
           '• Le nombre minimum ne peut pas dépasser le maximum\n' +
           '• Les jeux sont sélectionnés aléatoirement pour les plans hebdomadaires\n' +
-          '• Un plan hebdomadaire peut contenir jusqu\'à 5 jeux',
-        inline: false
+          "• Un plan hebdomadaire peut contenir jusqu'à 5 jeux",
+        inline: false,
       }
     )
     .setTimestamp()
@@ -194,26 +196,26 @@ function creerAideActivites(): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle('📅 Gestion des Activités')
     .setDescription('Planifiez des activités extras hebdomadaires (AfterWork, déjeuners, etc.).')
-    .setColor(0xFF9900)
+    .setColor(0xff9900)
     .addFields(
       {
         name: '➕ /addactivity',
-        value: 
+        value:
           '**Description :** Ajoute une nouvelle activité récurrente\n\n' +
           '**Options :**\n' +
-          '• `nom` (requis) - Nom de l\'activité\n' +
+          "• `nom` (requis) - Nom de l'activité\n" +
           '• `jour` (requis) - Jour de la semaine (0=Dimanche, 1=Lundi...)\n' +
-          '• `description` (optionnel) - Description de l\'activité\n' +
-          '• `lieu` (optionnel) - Lieu de l\'activité\n' +
+          "• `description` (optionnel) - Description de l'activité\n" +
+          "• `lieu` (optionnel) - Lieu de l'activité\n" +
           '• `heure` (optionnel) - Heure (ex: "18:00" ou "18h")\n' +
-          '• `actif` (optionnel) - Si l\'activité est active (défaut: oui)\n\n' +
+          "• `actif` (optionnel) - Si l'activité est active (défaut: oui)\n\n" +
           '**Exemple :**\n' +
           '```/addactivity nom:"AfterWork" jour:1 description:"Apéro hebdo" lieu:"Le Pub" heure:"18:00"```',
-        inline: false
+        inline: false,
       },
       {
         name: '📋 /activities',
-        value: 
+        value:
           '**Description :** Affiche toutes les activités planifiées\n\n' +
           '**Options :**\n' +
           '• `activeseulement` (optionnel) - Afficher uniquement les activités actives\n\n' +
@@ -223,11 +225,11 @@ function creerAideActivites(): EmbedBuilder {
           '• Heure, lieu et description si disponibles\n\n' +
           '**Exemple :**\n' +
           '```/activities activeseulement:oui```',
-        inline: false
+        inline: false,
       },
       {
         name: '⚙️ /manageactivity (Admin)',
-        value: 
+        value:
           '**Description :** Gère les activités existantes\n\n' +
           '**Sous-commandes :**\n' +
           '• `basculer` - Active/désactive une activité\n' +
@@ -237,15 +239,15 @@ function creerAideActivites(): EmbedBuilder {
           '```/manageactivity basculer activite:"AfterWork"```\n' +
           '```/manageactivity modifier activite:"AfterWork" heure:"19:00"```\n' +
           '```/manageactivity supprimer activite:"AfterWork"```',
-        inline: false
+        inline: false,
       },
       {
         name: '💡 Conseils',
-        value: 
-          '• Les activités inactives n\'apparaissent pas dans les plans hebdomadaires\n' +
-          '• Utilisez l\'ID ou le nom pour gérer une activité\n' +
+        value:
+          "• Les activités inactives n'apparaissent pas dans les plans hebdomadaires\n" +
+          "• Utilisez l'ID ou le nom pour gérer une activité\n" +
           '• Les jours : 0=Dimanche, 1=Lundi, 2=Mardi, 3=Mercredi, 4=Jeudi, 5=Vendredi, 6=Samedi',
-        inline: false
+        inline: false,
       }
     )
     .setTimestamp()
@@ -259,23 +261,23 @@ function creerAidePlanification(): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle('🗓️ Planification Hebdomadaire')
     .setDescription('Génération automatique et manuelle de plans de jeux hebdomadaires.')
-    .setColor(0x9966FF)
+    .setColor(0x9966ff)
     .addFields(
       {
         name: '📅 Plan Hebdomadaire Automatique',
-        value: 
+        value:
           '**Fonctionnement :**\n' +
           '• Envoi automatique chaque **lundi à 10h00**\n' +
-          '• Sélection aléatoire de **jusqu\'à 5 jeux** du pool\n' +
+          "• Sélection aléatoire de **jusqu'à 5 jeux** du pool\n" +
           '• Inclut **toutes les activités actives** organisées par jour\n' +
           '• Format : Embed Discord riche et coloré\n\n' +
           '**Configuration requise :**\n' +
           'Utilisez `/setchannel` pour définir où envoyer les plans',
-        inline: false
+        inline: false,
       },
       {
         name: '🎲 /weeklyplan (Admin)',
-        value: 
+        value:
           '**Description :** Génère et envoie un plan hebdomadaire immédiatement\n\n' +
           '**Utilisation :**\n' +
           '• Exécutez dans le canal où vous voulez le plan\n' +
@@ -284,11 +286,11 @@ function creerAidePlanification(): EmbedBuilder {
           '**Exemple :**\n' +
           '```/weeklyplan```\n\n' +
           '**Permissions :** Gérer les messages',
-        inline: false
+        inline: false,
       },
       {
         name: '⚙️ /setchannel (Admin)',
-        value: 
+        value:
           '**Description :** Configure le canal pour les plans automatiques\n\n' +
           '**Options :**\n' +
           '• `canal` (requis) - Le canal textuel où envoyer les plans\n\n' +
@@ -298,11 +300,11 @@ function creerAidePlanification(): EmbedBuilder {
           '**Exemple :**\n' +
           '```/setchannel canal:#planning-hebdo```\n\n' +
           '**Permissions :** Gérer les canaux',
-        inline: false
+        inline: false,
       },
       {
         name: '📊 Contenu du Plan',
-        value: 
+        value:
           '**Section Jeux :**\n' +
           '• 5 jeux maximum sélectionnés aléatoirement\n' +
           '• Nom, description, catégorie\n' +
@@ -315,16 +317,16 @@ function creerAidePlanification(): EmbedBuilder {
           '• Embed Discord avec code couleur\n' +
           '• Période : Lundi → Dimanche\n' +
           '• Émojis pour une meilleure lisibilité',
-        inline: false
+        inline: false,
       },
       {
         name: '💡 Conseils',
-        value: 
+        value:
           '• Ajoutez au moins 5 jeux pour avoir de la variété\n' +
           '• Configurez vos activités avant le premier lundi\n' +
-          '• Les plans sont sauvegardés dans l\'historique\n' +
+          "• Les plans sont sauvegardés dans l'historique\n" +
           '• Un backup des 10 derniers plans est conservé',
-        inline: false
+        inline: false,
       }
     )
     .setTimestamp()
@@ -338,22 +340,22 @@ function creerAideUtilitaires(): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle('🛠️ Commandes Utilitaires')
     .setDescription('Commandes pratiques pour interagir avec le bot et obtenir des informations.')
-    .setColor(0x0099FF)
+    .setColor(0x0099ff)
     .addFields(
       {
         name: '🏓 /ping',
-        value: 
+        value:
           '**Description :** Vérifie la latence du bot\n\n' +
           '**Affiche :**\n' +
           '• Latence de la réponse (temps de traitement)\n' +
           '• Latence API Discord (ping WebSocket)\n\n' +
           '**Exemple :**\n' +
           '```/ping```',
-        inline: false
+        inline: false,
       },
       {
         name: '📢 /echo',
-        value: 
+        value:
           '**Description :** Fait répéter un message par le bot\n\n' +
           '**Options :**\n' +
           '• `message` (requis) - Le message à répéter (max 2000 caractères)\n' +
@@ -362,11 +364,11 @@ function creerAideUtilitaires(): EmbedBuilder {
           '• Les mentions @everyone et @here sont bloquées\n\n' +
           '**Exemple :**\n' +
           '```/echo message:"Bonjour tout le monde !" ephemere:non```',
-        inline: false
+        inline: false,
       },
       {
         name: '🏰 /serverinfo',
-        value: 
+        value:
           '**Description :** Affiche les informations du serveur Discord\n\n' +
           '**Informations affichées :**\n' +
           '• Nom et icône du serveur\n' +
@@ -377,16 +379,16 @@ function creerAideUtilitaires(): EmbedBuilder {
           '• Niveau de vérification et de boost\n\n' +
           '**Exemple :**\n' +
           '```/serverinfo```',
-        inline: false
+        inline: false,
       },
       {
         name: '👤 /userinfo',
-        value: 
-          '**Description :** Affiche les informations d\'un utilisateur\n\n' +
+        value:
+          "**Description :** Affiche les informations d'un utilisateur\n\n" +
           '**Options :**\n' +
-          '• `cible` (optionnel) - L\'utilisateur à afficher (défaut : vous-même)\n\n' +
+          "• `cible` (optionnel) - L'utilisateur à afficher (défaut : vous-même)\n\n" +
           '**Informations affichées :**\n' +
-          '• Nom d\'utilisateur et avatar\n' +
+          "• Nom d'utilisateur et avatar\n" +
           '• ID utilisateur\n' +
           '• Date de création du compte\n' +
           '• Date de rejoint du serveur (si applicable)\n' +
@@ -394,11 +396,11 @@ function creerAideUtilitaires(): EmbedBuilder {
           '**Exemples :**\n' +
           '```/userinfo```\n' +
           '```/userinfo cible:@utilisateur```',
-        inline: false
+        inline: false,
       },
       {
         name: '❓ /help',
-        value: 
+        value:
           '**Description :** Affiche cette aide (vous êtes ici !)\n\n' +
           '**Options :**\n' +
           '• `categorie` (optionnel) - Catégorie spécifique à afficher\n\n' +
@@ -409,13 +411,9 @@ function creerAideUtilitaires(): EmbedBuilder {
           '• 🛠️ Utilitaires\n\n' +
           '**Exemple :**\n' +
           '```/help categorie:jeux```',
-        inline: false
+        inline: false,
       }
     )
     .setTimestamp()
     .setFooter({ text: 'Retour : /help' });
 }
-
-
-
-

@@ -24,7 +24,11 @@ export class Journaliseur {
   /**
    * Formate une entrée de log avec horodatage et contexte
    */
-  private static formaterEntreeLog(niveau: NiveauLog, message: string, contexte: ContexteLog = {}): EntreeLog {
+  private static formaterEntreeLog(
+    niveau: NiveauLog,
+    message: string,
+    contexte: ContexteLog = {}
+  ): EntreeLog {
     return {
       horodatage: new Date().toISOString(),
       niveau: niveau.toUpperCase(),

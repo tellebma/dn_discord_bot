@@ -45,7 +45,7 @@ export class ClientRAWG {
     try {
       // Récupérer les jeux tendance (popularité récente)
       const url = `${RAWG_API_BASE}/games?key=${this.apiKey}&dates=${this.obtenirDatesDernierMois()}&ordering=-added&page_size=${limite}`;
-      
+
       const response = await fetch(url);
       const data = await response.json();
 
@@ -58,7 +58,7 @@ export class ClientRAWG {
         popularite: jeu.added || 0,
         note: jeu.rating || 0,
         plateforme: this.formaterPlateformes(jeu.platforms),
-        imageUrl: jeu.background_image
+        imageUrl: jeu.background_image,
       }));
 
       this.mettreEnCache(cacheKey, jeux);
@@ -110,11 +110,9 @@ export class ClientRAWG {
    */
   private formaterPlateformes(platforms: any[]): string {
     if (!platforms || platforms.length === 0) return 'Multi-plateformes';
-    
-    const noms = platforms
-      .slice(0, 3)
-      .map((p: any) => p.platform.name);
-    
+
+    const noms = platforms.slice(0, 3).map((p: any) => p.platform.name);
+
     return noms.join(', ') + (platforms.length > 3 ? '...' : '');
   }
 
@@ -129,11 +127,7 @@ export class ClientRAWG {
   private mettreEnCache(key: string, data: any): void {
     this.cache.set(key, {
       data,
-      expiration: Date.now() + this.cacheDuration
+      expiration: Date.now() + this.cacheDuration,
     });
   }
 }
-
-
-
-
