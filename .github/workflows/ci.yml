@@ -81,7 +81,7 @@ jobs:
           echo "**TypeScript :** $(npx tsc --version)" >> $GITHUB_STEP_SUMMARY
 
       - name: 📤 Upload des artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
