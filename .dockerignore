@@ -16,8 +16,8 @@ yarn-debug.log
 # TypeScript
 *.ts
 !*.d.ts
-tsconfig.json
-src/
+# tsconfig.json - Nécessaire pour le build
+# src/ - Nécessaire pour le build
 
 # Sauf si vous voulez builder dans Docker, commentez src/ ci-dessus
 
@@ -91,7 +91,7 @@ ehthumbs.db
 Thumbs.db
 
 # Scripts de développement
-scripts/
+# scripts/ - Nécessaire pour le démarrage du conteneur
 
 # Divers
 .prettierrc
