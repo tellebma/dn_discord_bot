@@ -1,65 +1,68 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { createStandardCommand } from '@/utils/commandTemplate';
+import { creerCommandeStandard } from '@/utils/commandTemplate';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
-const commandData = new SlashCommandBuilder()
+/**
+ * Commande echo pour répéter un message
+ */
+const donneesCommande = new SlashCommandBuilder()
   .setName('echo')
-  .setDescription('Echo a message back')
-  .addStringOption(option =>
+  .setDescription('Répéter un message')
+  .addStringOption((option: any) =>
     option
       .setName('message')
-      .setDescription('The message to echo')
+      .setDescription('Le message à répéter')
       .setRequired(true)
       .setMaxLength(2000)
   )
-  .addBooleanOption(option =>
+  .addBooleanOption((option: any) =>
     option
-      .setName('ephemeral')
-      .setDescription('Whether the response should be private')
+      .setName('ephemere')
+      .setDescription('Si la réponse doit être privée')
       .setRequired(false)
   );
 
-export default createStandardCommand({
-  name: 'echo',
-  description: 'Echo a message back',
-  category: 'utility',
+export default creerCommandeStandard({
+  nom: 'echo',
+  description: 'Répéter un message',
+  categorie: 'utilitaire',
   permissions: [],
-  cooldown: 2,
-  data: commandData,
-  parameters: [
+  delaiAttente: 2,
+  data: donneesCommande,
+  parametres: [
     {
       type: 'string',
-      name: 'message',
-      description: 'The message to echo',
-      required: true,
+      nom: 'message',
+      description: 'Le message à répéter',
+      requis: true,
       validation: {
-        minLength: 1,
-        maxLength: 2000,
+        longueurMin: 1,
+        longueurMax: 2000,
       },
     },
     {
       type: 'boolean',
-      name: 'ephemeral',
-      description: 'Whether the response should be private',
-      required: false,
+      nom: 'ephemere',
+      description: 'Si la réponse doit être privée',
+      requis: false,
     },
   ],
-  handler: async (
+  gestionnaire: async (
     interaction: ChatInputCommandInteraction,
     params: Record<string, any>
   ): Promise<void> => {
     const message = params.message as string;
-    const ephemeral = (params.ephemeral as boolean) ?? false;
+    const ephemere = (params.ephemere as boolean) ?? false;
 
-    // Basic content filtering - prevent @everyone/@here mentions
-    const filteredMessage = message
-      .replace(/@everyone/gi, '@\\u200Beveryone')
-      .replace(/@here/gi, '@\\u200Bhere');
+    // Filtrage de contenu basique - empêche les mentions @everyone/@here
+    const messageFiltre = message
+      .replace(/@everyone/gi, '@\u200Beveryone')
+      .replace(/@here/gi, '@\u200Bhere');
 
     await interaction.reply({
-      content: `📢 ${filteredMessage}`,
-      ephemeral: ephemeral,
-      allowedMentions: { parse: [] }, // Prevent all mentions for safety
+      content: `📢 ${messageFiltre}`,
+      ephemeral: ephemere,
+      allowedMentions: { parse: [] }, // Empêche toutes les mentions pour la sécurité
     });
   },
 });

@@ -1,47 +1,53 @@
 import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
-import { GamePoolManager } from '@/fonctions/database/gamePool';
+import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 
+/**
+ * Commande pour afficher tous les jeux du pool
+ */
 export const data = new SlashCommandBuilder()
   .setName('gamepool')
-  .setDescription('View all games in the pool');
+  .setDescription('Afficher tous les jeux du pool');
 
 export async function execute(interaction: CommandInteraction) {
-  const gamePoolManager = GamePoolManager.getInstance();
-  const games = gamePoolManager.getGames();
+  const gestionnaireJeux = GestionnairePoolJeux.getInstance();
+  const jeux = gestionnaireJeux.obtenirJeux();
 
-  if (games.length === 0) {
+  if (jeux.length === 0) {
     await interaction.reply({
-      content: 'The game pool is empty! Use `/addgame` to add some games.',
+      content: 'Le pool de jeux est vide ! Utilisez `/addgame` pour ajouter des jeux.',
       ephemeral: true
     });
     return;
   }
 
   const embed = new EmbedBuilder()
-    .setTitle('🎮 Game Pool')
-    .setDescription(`Total games: ${games.length}`)
+    .setTitle('🎮 Pool de Jeux')
+    .setDescription(`Total de jeux : ${jeux.length}`)
     .setColor(0x0099FF)
     .setTimestamp();
 
-  const gameList = games.map((game, index) => {
-    let gameInfo = `**${index + 1}. ${game.name}**`;
-    if (game.description) gameInfo += `\n   ${game.description}`;
-    if (game.minPlayers || game.maxPlayers) {
-      const players = game.minPlayers && game.maxPlayers 
-        ? `${game.minPlayers}-${game.maxPlayers}` 
-        : game.minPlayers 
-        ? `${game.minPlayers}+` 
-        : `up to ${game.maxPlayers}`;
-      gameInfo += `\n   👥 ${players} players`;
+  const listeJeux = jeux.map((jeu, index) => {
+    let infoJeu = `**${index + 1}. ${jeu.nom}**`;
+    if (jeu.description) infoJeu += `\n   ${jeu.description}`;
+    
+    if (jeu.joueursMin || jeu.joueursMax) {
+      const joueurs = jeu.joueursMin && jeu.joueursMax 
+        ? `${jeu.joueursMin}-${jeu.joueursMax}` 
+        : jeu.joueursMin 
+        ? `${jeu.joueursMin}+` 
+        : `jusqu'à ${jeu.joueursMax}`;
+      infoJeu += `\n   👥 ${joueurs} joueurs`;
     }
-    if (game.category) gameInfo += `\n   📂 ${game.category}`;
-    return gameInfo;
+    
+    if (jeu.categorie) infoJeu += `\n   📂 ${jeu.categorie}`;
+    return infoJeu;
   }).join('\n\n');
 
-  if (gameList.length > 4000) {
-    embed.setDescription(`Total games: ${games.length}\n\n${gameList.substring(0, 3900)}...\n\n*List truncated due to length*`);
+  // Tronque la liste si elle est trop longue pour Discord
+  if (listeJeux.length > 4000) {
+    embed.setDescription(`Total de jeux : ${jeux.length}\n\n${listeJeux.substring(0, 3900)}...\n\n*Liste tronquée en raison de la longueur*`);
   } else {
-    embed.setDescription(`Total games: ${games.length}\n\n${gameList}`);
+    embed.setDescription(`Total de jeux : ${jeux.length}\n\n${listeJeux}`);
   }
 
   await interaction.reply({ embeds: [embed] });

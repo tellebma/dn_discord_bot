@@ -1,15 +1,18 @@
 import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
-import { WeeklyPlanner } from '@/fonctions/scheduler/weeklyPlanner';
+import { PlanificateurHebdomadaire } from '@/fonctions/scheduler/weeklyPlanner';
 
+/**
+ * Commande pour générer et envoyer manuellement un plan hebdomadaire
+ */
 export const data = new SlashCommandBuilder()
   .setName('weeklyplan')
-  .setDescription('Generate and send a weekly game plan')
+  .setDescription('Générer et envoyer un plan de jeux hebdomadaire')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
 export async function execute(interaction: CommandInteraction) {
   if (!interaction.channelId) {
     await interaction.reply({
-      content: '❌ This command must be used in a channel!',
+      content: '❌ Cette commande doit être utilisée dans un canal !',
       ephemeral: true
     });
     return;
@@ -18,16 +21,16 @@ export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
 
   try {
-    const weeklyPlanner = WeeklyPlanner.getInstance(interaction.client);
-    const plan = await weeklyPlanner.manualWeeklyPlan(interaction.channelId);
+    const planificateur = PlanificateurHebdomadaire.getInstance(interaction.client);
+    const plan = await planificateur.planHebdomadaireManuel(interaction.channelId);
 
     await interaction.editReply({
-      content: `✅ Weekly plan generated for the week: ${plan.week}\nSelected ${plan.games.length} games and ${plan.extraActivities.length} extra activities.`
+      content: `✅ Plan hebdomadaire généré pour la semaine : ${plan.semaine}\nSélectionné ${plan.jeux.length} jeu(x) et ${plan.activitesExtras.length} activité(s) extra(s).`
     });
-  } catch (error) {
-    console.error('Error generating weekly plan:', error);
+  } catch (erreur) {
+    console.error('Erreur lors de la génération du plan hebdomadaire :', erreur);
     await interaction.editReply({
-      content: '❌ An error occurred while generating the weekly plan.'
+      content: '❌ Une erreur s\'est produite lors de la génération du plan hebdomadaire.'
     });
   }
 }

@@ -1,37 +1,42 @@
-export interface Game {
+/** Représente un jeu dans le pool */
+export interface Jeu {
   id: string;
-  name: string;
+  nom: string;
   description?: string;
-  category?: string;
-  minPlayers?: number;
-  maxPlayers?: number;
-  addedBy: string;
-  addedAt: Date;
+  categorie?: string;
+  joueursMin?: number;
+  joueursMax?: number;
+  ajoutePar: string;
+  ajouteLe: Date;
 }
 
-export interface GamePool {
-  games: Game[];
+/** Pool de jeux */
+export interface PoolDeJeux {
+  jeux: Jeu[];
 }
 
-export interface ExtraActivity {
+/** Activité extra hebdomadaire */
+export interface ActiviteExtra {
   id: string;
-  name: string;
+  nom: string;
   description?: string;
-  location?: string;
-  time?: string;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
-  isActive: boolean;
-  addedBy: string;
-  addedAt: Date;
+  lieu?: string;
+  heure?: string;
+  jourSemaine: number; // 0 = Dimanche, 1 = Lundi, etc.
+  estActif: boolean;
+  ajoutePar: string;
+  ajouteLe: Date;
 }
 
-export interface ExtraActivitiesPool {
-  activities: ExtraActivity[];
+/** Pool d'activités extras */
+export interface PoolActivitesExtras {
+  activites: ActiviteExtra[];
 }
 
-export interface WeeklyPlan {
-  week: string;
-  games: Game[];
-  extraActivities: ExtraActivity[];
-  generatedAt: Date;
+/** Plan hebdomadaire */
+export interface PlanHebdomadaire {
+  semaine: string;
+  jeux: Jeu[];
+  activitesExtras: ActiviteExtra[];
+  genereLe: Date;
 }

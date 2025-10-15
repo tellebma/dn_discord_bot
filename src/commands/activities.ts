@@ -1,24 +1,29 @@
 import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
-import { ExtraActivitiesManager } from '@/fonctions/database/extraActivities';
+import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
 
+/**
+ * Commande pour afficher toutes les activités extras
+ */
 export const data = new SlashCommandBuilder()
   .setName('activities')
-  .setDescription('View all extra activities')
+  .setDescription('Afficher toutes les activités extras')
   .addBooleanOption(option =>
-    option.setName('activeonly')
-      .setDescription('Show only active activities (default: false)')
+    option.setName('activeseulement')
+      .setDescription('Afficher uniquement les activités actives (par défaut : non)')
       .setRequired(false));
 
 export async function execute(interaction: CommandInteraction) {
-  const activeOnly = interaction.options.get('activeonly')?.value as boolean ?? false;
+  const activesUniquement = interaction.options.get('activeseulement')?.value as boolean ?? false;
   
-  const activitiesManager = ExtraActivitiesManager.getInstance();
-  const activities = activeOnly ? activitiesManager.getActiveActivities() : activitiesManager.getActivities();
+  const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
+  const activites = activesUniquement 
+    ? gestionnaireActivites.obtenirActivitesActives() 
+    : gestionnaireActivites.obtenirActivites();
 
-  if (activities.length === 0) {
-    const message = activeOnly 
-      ? 'No active extra activities found! Use `/addactivity` to add some.'
-      : 'No extra activities found! Use `/addactivity` to add some.';
+  if (activites.length === 0) {
+    const message = activesUniquement 
+      ? 'Aucune activité extra active trouvée ! Utilisez `/addactivity` pour en ajouter.'
+      : 'Aucune activité extra trouvée ! Utilisez `/addactivity` pour en ajouter.';
     
     await interaction.reply({
       content: message,
@@ -28,50 +33,51 @@ export async function execute(interaction: CommandInteraction) {
   }
 
   const embed = new EmbedBuilder()
-    .setTitle('📅 Extra Activities')
-    .setDescription(`${activeOnly ? 'Active activities' : 'All activities'}: ${activities.length}`)
+    .setTitle('📅 Activités Extras')
+    .setDescription(`${activesUniquement ? 'Activités actives' : 'Toutes les activités'} : ${activites.length}`)
     .setColor(0x9966FF)
     .setTimestamp();
 
-  const dayGroups: { [key: number]: any[] } = {};
+  // Regroupe les activités par jour
+  const groupesJours: { [cle: number]: any[] } = {};
   
-  activities.forEach(activity => {
-    if (!dayGroups[activity.dayOfWeek]) {
-      dayGroups[activity.dayOfWeek] = [];
+  activites.forEach(activite => {
+    if (!groupesJours[activite.jourSemaine]) {
+      groupesJours[activite.jourSemaine] = [];
     }
-    dayGroups[activity.dayOfWeek].push(activity);
+    groupesJours[activite.jourSemaine].push(activite);
   });
 
-  // Sort days from Sunday (0) to Saturday (6)
-  const sortedDays = Object.keys(dayGroups).map(Number).sort();
+  // Trie les jours du dimanche (0) au samedi (6)
+  const joursTries = Object.keys(groupesJours).map(Number).sort();
 
-  sortedDays.forEach(dayOfWeek => {
-    const dayName = activitiesManager.getDayName(dayOfWeek);
-    const dayActivities = dayGroups[dayOfWeek];
+  joursTries.forEach(jourSemaine => {
+    const nomJour = gestionnaireActivites.obtenirNomJour(jourSemaine);
+    const activitesJour = groupesJours[jourSemaine];
     
-    const activitiesList = dayActivities.map(activity => {
-      let activityInfo = `${activity.isActive ? '🟢' : '🔴'} **${activity.name}**`;
+    const listeActivites = activitesJour.map(activite => {
+      let infoActivite = `${activite.estActif ? '🟢' : '🔴'} **${activite.nom}**`;
       
-      if (activity.time) {
-        activityInfo += ` • ${activity.time}`;
+      if (activite.heure) {
+        infoActivite += ` • ${activite.heure}`;
       }
       
-      if (activity.location) {
-        activityInfo += ` • 📍 ${activity.location}`;
+      if (activite.lieu) {
+        infoActivite += ` • 📍 ${activite.lieu}`;
       }
       
-      if (activity.description) {
-        activityInfo += `\n   ${activity.description}`;
+      if (activite.description) {
+        infoActivite += `\n   ${activite.description}`;
       }
       
-      activityInfo += `\n   *ID: ${activity.id}*`;
+      infoActivite += `\n   *ID : ${activite.id}*`;
       
-      return activityInfo;
+      return infoActivite;
     }).join('\n\n');
 
     embed.addFields({
-      name: `${dayName} (${dayActivities.length})`,
-      value: activitiesList,
+      name: `${nomJour} (${activitesJour.length})`,
+      value: listeActivites,
       inline: false
     });
   });

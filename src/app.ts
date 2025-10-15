@@ -2,165 +2,238 @@ import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js'
 import { readdirSync } from 'fs';
 import { join } from 'path';
 import { config as dotenvConfig } from 'dotenv';
-import type { BotCommand, ExtendedClient } from '@/types/bot';
+import type { CommandeBot, ClientEtendu } from '@/types/bot';
 
 dotenvConfig();
 
+// Initialisation du client Discord avec les intentions nécessaires
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
   ],
-}) as ExtendedClient;
+}) as ClientEtendu;
 
-client.commands = new Collection<string, BotCommand>();
+client.commands = new Collection<string, CommandeBot>();
 
-async function loadCommands(): Promise<void> {
-  const commands: any[] = [];
-  const commandsPath = join(__dirname, 'commands');
+/**
+ * Charge toutes les commandes depuis le répertoire commands
+ */
+async function chargerCommandes(): Promise<void> {
+  const commandes: any[] = [];
+  const cheminCommandes = join(__dirname, 'commands');
 
   try {
-    const commandFiles = readdirSync(commandsPath).filter(file => 
-      file.endsWith('.ts') || file.endsWith('.js')
+    const fichiersCommandes = readdirSync(cheminCommandes).filter(fichier => 
+      fichier.endsWith('.ts') || fichier.endsWith('.js')
     );
 
-    for (const file of commandFiles) {
-      const filePath = join(commandsPath, file);
+    for (const fichier of fichiersCommandes) {
+      const cheminFichier = join(cheminCommandes, fichier);
       
       try {
-        // Dynamic import for ES modules compatibility
-        const commandModule = await import(filePath);
-        const command = commandModule.default || commandModule;
+        // Import dynamique pour la compatibilité des modules ES
+        const moduleCommande = await import(cheminFichier);
+        const commande = moduleCommande.default || moduleCommande;
 
-        if ('data' in command && 'execute' in command) {
-          client.commands.set(command.data.name, command as BotCommand);
-          commands.push(command.data.toJSON());
-          console.log(`✅ Loaded command: ${command.data.name}`);
+        if ('data' in commande && 'execute' in commande) {
+          client.commands.set(commande.data.name, commande as CommandeBot);
+          commandes.push(commande.data.toJSON());
+          console.log(`✅ Commande chargée : ${commande.data.name}`);
         } else {
-          console.log(`⚠️ Command at ${filePath} is missing required "data" or "execute" property.`);
+          console.log(`⚠️ La commande ${cheminFichier} n'a pas les propriétés requises "data" ou "execute".`);
         }
-      } catch (error) {
-        console.error(`❌ Error loading command ${file}:`, error);
+      } catch (erreur) {
+        console.error(`❌ Erreur lors du chargement de la commande ${fichier} :`, erreur);
       }
     }
-  } catch (error) {
-    console.log('Commands directory not found, creating...');
-    // In a real implementation, you might want to create the directory here
+  } catch (erreur) {
+    console.log('Répertoire des commandes introuvable, création en cours...');
+    // Dans une vraie implémentation, vous pourriez créer le répertoire ici
   }
 
-  // Deploy commands
-  if (commands.length > 0) {
-    await deployCommands(commands);
+  // Déploiement des commandes
+  if (commandes.length > 0) {
+    await deployerCommandes(commandes);
   }
 }
 
-async function loadEvents(): Promise<void> {
-  const eventsPath = join(__dirname, 'events');
+/**
+ * Charge tous les événements depuis le répertoire events
+ */
+async function chargerEvenements(): Promise<void> {
+  const cheminEvenements = join(__dirname, 'events');
 
   try {
-    const eventFiles = readdirSync(eventsPath).filter(file => 
-      file.endsWith('.ts') || file.endsWith('.js')
+    const fichiersEvenements = readdirSync(cheminEvenements).filter(fichier => 
+      fichier.endsWith('.ts') || fichier.endsWith('.js')
     );
 
-    for (const file of eventFiles) {
-      const filePath = join(eventsPath, file);
+    for (const fichier of fichiersEvenements) {
+      const cheminFichier = join(cheminEvenements, fichier);
       
       try {
-        const eventModule = await import(filePath);
-        const event = eventModule.default || eventModule;
+        const moduleEvenement = await import(cheminFichier);
+        const evenement = moduleEvenement.default || moduleEvenement;
 
-        if (event.once) {
-          client.once(event.name, (...args: any[]) => event.execute(...args));
+        if (evenement.once) {
+          client.once(evenement.name, (...args: any[]) => evenement.execute(...args));
         } else {
-          client.on(event.name, (...args: any[]) => event.execute(...args));
+          client.on(evenement.name, (...args: any[]) => evenement.execute(...args));
         }
-        console.log(`✅ Loaded event: ${event.name}`);
-      } catch (error) {
-        console.error(`❌ Error loading event ${file}:`, error);
+        console.log(`✅ Événement chargé : ${evenement.name}`);
+      } catch (erreur) {
+        console.error(`❌ Erreur lors du chargement de l'événement ${fichier} :`, erreur);
       }
     }
-  } catch (error) {
-    console.log('Events directory not found, creating...');
+  } catch (erreur) {
+    console.log('Répertoire des événements introuvable, création en cours...');
   }
 }
 
-async function deployCommands(commands: any[]): Promise<void> {
+/**
+ * Déploie les commandes sur Discord
+ */
+async function deployerCommandes(commandes: any[]): Promise<void> {
   if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
-    throw new Error('Missing required environment variables: DISCORD_TOKEN or DISCORD_CLIENT_ID');
+    throw new Error('Variables d\'environnement requises manquantes : DISCORD_TOKEN ou DISCORD_CLIENT_ID');
   }
 
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
   try {
-    console.log('🔄 Started refreshing application (/) commands.');
+    console.log('🔄 Début de l\'actualisation des commandes (/) de l\'application.');
 
     await rest.put(
       Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-      { body: commands }
+      { body: commandes }
     );
 
-    console.log('✅ Successfully reloaded application (/) commands.');
-  } catch (error) {
-    console.error('❌ Error deploying commands:', error);
+    console.log('✅ Les commandes (/) de l\'application ont été rechargées avec succès.');
+  } catch (erreur) {
+    console.error('❌ Erreur lors du déploiement des commandes :', erreur);
   }
 }
 
+// Gestion des interactions (commandes, autocomplétion, boutons)
 client.on('interactionCreate', async interaction => {
+  // Gestion de l'autocomplétion
+  if (interaction.isAutocomplete()) {
+    const commande = client.commands.get(interaction.commandName);
+    
+    if (!commande) {
+      console.error(`Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`);
+      return;
+    }
+
+    try {
+      // Si la commande a une fonction autocomplete, l'exécuter
+      if ('autocomplete' in commande && typeof (commande as any).autocomplete === 'function') {
+        await (commande as any).autocomplete(interaction);
+      }
+    } catch (erreur) {
+      console.error(`Erreur lors de l'autocomplétion de ${interaction.commandName} :`, erreur);
+    }
+    return;
+  }
+
+  // Gestion des boutons (pour les votes)
+  if (interaction.isButton()) {
+    const { GestionnaireVotes } = await import('@/fonctions/voting/voteManager');
+    const gestionnaireVotes = GestionnaireVotes.getInstance(client);
+    
+    // Vérifier si c'est un bouton de vote
+    if (interaction.customId.startsWith('vote_')) {
+      const idJeu = interaction.customId.replace('vote_', '');
+      const sessionActive = gestionnaireVotes.obtenirSessionActive();
+      
+      if (sessionActive) {
+        const voteEnregistre = await gestionnaireVotes.gererVote(
+          sessionActive.id,
+          idJeu,
+          interaction.user.id
+        );
+
+        if (voteEnregistre) {
+          await interaction.reply({
+            content: '✅ Votre vote a été enregistré de manière anonyme !',
+            ephemeral: true
+          });
+        } else {
+          await interaction.reply({
+            content: '❌ Erreur lors de l\'enregistrement de votre vote.',
+            ephemeral: true
+          });
+        }
+      } else {
+        await interaction.reply({
+          content: '❌ Cette session de vote n\'est plus active.',
+          ephemeral: true
+        });
+      }
+    }
+    return;
+  }
+
+  // Gestion des commandes normales
   if (!interaction.isChatInputCommand()) return;
 
-  const command = client.commands.get(interaction.commandName);
+  const commande = client.commands.get(interaction.commandName);
 
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
+  if (!commande) {
+    console.error(`Aucune commande correspondant à ${interaction.commandName} n'a été trouvée.`);
     return;
   }
 
   try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(`Error executing ${interaction.commandName}:`, error);
+    await commande.execute(interaction);
+  } catch (erreur) {
+    console.error(`Erreur lors de l'exécution de ${interaction.commandName} :`, erreur);
 
-    const errorMessage = {
-      content: 'There was an error while executing this command!',
+    const messageErreur = {
+      content: 'Une erreur s\'est produite lors de l\'exécution de cette commande !',
       ephemeral: true,
     };
 
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(errorMessage);
+      await interaction.followUp(messageErreur);
     } else {
-      await interaction.reply(errorMessage);
+      await interaction.reply(messageErreur);
     }
   }
 });
 
+// Événement déclenché une fois que le bot est prêt
 client.once('ready', async () => {
-  console.log(`🤖 Bot is ready! Logged in as ${client.user?.tag}`);
+  console.log(`🤖 Le bot est prêt ! Connecté en tant que ${client.user?.tag}`);
 });
 
-// Global error handlers
-process.on('unhandledRejection', (error: Error) => {
-  console.error('Unhandled promise rejection:', error);
+// Gestionnaires d'erreurs globaux
+process.on('unhandledRejection', (erreur: Error) => {
+  console.error('Rejet de promesse non géré :', erreur);
 });
 
-process.on('uncaughtException', (error: Error) => {
-  console.error('Uncaught exception:', error);
+process.on('uncaughtException', (erreur: Error) => {
+  console.error('Exception non capturée :', erreur);
   process.exit(1);
 });
 
-// Initialize the bot
-async function start(): Promise<void> {
+/**
+ * Initialise et démarre le bot
+ */
+async function demarrer(): Promise<void> {
   try {
-    await loadEvents();
-    await loadCommands();
+    await chargerEvenements();
+    await chargerCommandes();
     
     if (!process.env.DISCORD_TOKEN) {
-      throw new Error('DISCORD_TOKEN is required');
+      throw new Error('DISCORD_TOKEN est requis');
     }
     
     await client.login(process.env.DISCORD_TOKEN);
-  } catch (error) {
-    console.error('Failed to start bot:', error);
+  } catch (erreur) {
+    console.error('Échec du démarrage du bot :', erreur);
     process.exit(1);
   }
 }
 
-void start();
+void demarrer();
