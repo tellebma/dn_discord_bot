@@ -1,7 +1,7 @@
 import { JeuTendance } from '@/types/stats';
 
-const STEAM_API_BASE = 'https://api.steampowered.com';
-const STEAM_CHARTS_URL = 'https://steamcharts.com/top';
+// const STEAM_API_BASE = 'https://api.steampowered.com';
+// const STEAM_CHARTS_URL = 'https://steamcharts.com/top';
 
 /**
  * Client pour l'API Steam

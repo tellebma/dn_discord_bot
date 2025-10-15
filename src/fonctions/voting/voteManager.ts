@@ -5,12 +5,10 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  ButtonInteraction,
 } from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 import { GestionnaireStatistiques } from '@/fonctions/analytics/statsManager';
-import { PlanificateurHebdomadaire } from '@/fonctions/scheduler/weeklyPlanner';
-import { SessionVote, VoteJeu, ResultatVote, RappelVote } from '@/types/vote';
+import { SessionVote, ResultatVote, RappelVote } from '@/types/vote';
 import fs from 'fs';
 import path from 'path';
 
@@ -393,7 +391,7 @@ export class GestionnaireVotes {
     idsJeuxSelectionnes: string[]
   ): Promise<void> {
     try {
-      const planificateur = PlanificateurHebdomadaire.getInstance(this.client);
+      // const planificateur = PlanificateurHebdomadaire.getInstance(this.client);
       // Le plan sera généré avec les jeux sélectionnés par vote
       // (nécessite modification du planificateur pour accepter une sélection manuelle)
       console.log(`📅 Plan généré avec les jeux votés : ${idsJeuxSelectionnes.join(', ')}`);

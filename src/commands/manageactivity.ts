@@ -84,7 +84,7 @@ export async function execute(interaction: CommandInteraction) {
   }
 
   switch (sousCommande) {
-    case 'basculer':
+    case 'basculer': {
       const activiteBasculee = gestionnaireActivites.basculerActivite(activite.id);
       if (activiteBasculee) {
         const statut = activiteBasculee.estActif ? '🟢 Active' : '🔴 Inactive';
@@ -105,14 +105,15 @@ export async function execute(interaction: CommandInteraction) {
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
-    case 'supprimer':
+    case 'supprimer': {
       const supprimee = gestionnaireActivites.supprimerActivite(activite.id);
       if (supprimee) {
         const embed = new EmbedBuilder()
           .setTitle('🗑️ Activité Supprimée')
           .setDescription(
-            `**${activite.nom}** a été définitivement supprimée de l\'emploi du temps.`
+            `**${activite.nom}** a été définitivement supprimée de l'emploi du temps.`
           )
           .setColor(0xff0000)
           .addFields(
@@ -128,8 +129,9 @@ export async function execute(interaction: CommandInteraction) {
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
-    case 'modifier':
+    case 'modifier': {
       const nouveauNom = interaction.options.get('nom')?.value as string;
       const nouvelleDescription = interaction.options.get('description')?.value as string;
       const nouveauLieu = interaction.options.get('lieu')?.value as string;
@@ -187,6 +189,7 @@ export async function execute(interaction: CommandInteraction) {
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
     default:
       await interaction.reply({

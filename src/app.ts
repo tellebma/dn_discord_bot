@@ -46,7 +46,7 @@ async function chargerCommandes(): Promise<void> {
         console.error(`❌ Erreur lors du chargement de la commande ${fichier} :`, erreur);
       }
     }
-  } catch (erreur) {
+  } catch {
     console.log('Répertoire des commandes introuvable, création en cours...');
     // Dans une vraie implémentation, vous pourriez créer le répertoire ici
   }
@@ -85,7 +85,7 @@ async function chargerEvenements(): Promise<void> {
         console.error(`❌ Erreur lors du chargement de l'événement ${fichier} :`, erreur);
       }
     }
-  } catch (erreur) {
+  } catch {
     console.log('Répertoire des événements introuvable, création en cours...');
   }
 }

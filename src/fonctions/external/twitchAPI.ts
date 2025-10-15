@@ -165,7 +165,7 @@ export class ClientTwitch {
         totalSpectateurs,
         nbStreams: data.data.length,
       };
-    } catch (erreur) {
+    } catch {
       return { totalSpectateurs: 0, nbStreams: 0 };
     }
   }
