@@ -5,65 +5,74 @@ import { config as dotenvConfig } from 'dotenv';
 
 dotenvConfig();
 
-async function deployCommands(): Promise<void> {
-  const commands: any[] = [];
-  const commandsPath = join(__dirname, 'commands');
+/**
+ * Déploie toutes les commandes du bot sur Discord
+ * Ce script est exécuté séparément pour enregistrer les commandes slash
+ */
+async function deployerCommandes(): Promise<void> {
+  const commandes: any[] = [];
+  const cheminCommandes = join(__dirname, 'commands');
 
   try {
-    const commandFiles = readdirSync(commandsPath).filter(file => 
-      file.endsWith('.ts') || file.endsWith('.js')
+    const fichiersCommandes = readdirSync(cheminCommandes).filter(
+      fichier => fichier.endsWith('.ts') || fichier.endsWith('.js')
     );
 
-    console.log('🔍 Loading commands for deployment...');
+    console.log('🔍 Chargement des commandes pour le déploiement...');
 
-    for (const file of commandFiles) {
-      const filePath = join(commandsPath, file);
-      
+    for (const fichier of fichiersCommandes) {
+      const cheminFichier = join(cheminCommandes, fichier);
+
       try {
-        const commandModule = await import(filePath);
-        const command = commandModule.default || commandModule;
+        const moduleCommande = await import(cheminFichier);
+        const commande = moduleCommande.default || moduleCommande;
 
-        if ('data' in command && 'execute' in command) {
-          commands.push(command.data.toJSON());
-          console.log(`✅ Loaded command: ${command.data.name}`);
+        if ('data' in commande && 'execute' in commande) {
+          commandes.push(commande.data.toJSON());
+          console.log(`✅ Commande chargée : ${commande.data.name}`);
         } else {
-          console.log(`⚠️ Command at ${filePath} is missing required "data" or "execute" property.`);
+          console.log(
+            `⚠️ La commande ${cheminFichier} n'a pas les propriétés requises "data" ou "execute".`
+          );
         }
-      } catch (error) {
-        console.error(`❌ Error loading command ${file}:`, error);
+      } catch (erreur) {
+        console.error(`❌ Erreur lors du chargement de la commande ${fichier} :`, erreur);
       }
     }
-  } catch (error) {
-    console.error('❌ Error reading commands directory:', error);
+  } catch (erreur) {
+    console.error('❌ Erreur lors de la lecture du répertoire des commandes :', erreur);
     process.exit(1);
   }
 
-  if (commands.length === 0) {
-    console.log('⚠️ No commands found to deploy.');
+  if (commandes.length === 0) {
+    console.log('⚠️ Aucune commande trouvée à déployer.');
     return;
   }
 
   if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
-    console.error('❌ Missing required environment variables: DISCORD_TOKEN or DISCORD_CLIENT_ID');
+    console.error(
+      "❌ Variables d'environnement requises manquantes : DISCORD_TOKEN ou DISCORD_CLIENT_ID"
+    );
     process.exit(1);
   }
 
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
   try {
-    console.log(`🔄 Started refreshing ${commands.length} application (/) commands.`);
+    console.log(
+      `🔄 Début de l'actualisation de ${commandes.length} commande(s) (/) de l'application.`
+    );
 
-    const data = await rest.put(
-      Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-      { body: commands }
-    ) as any[];
+    const donnees = (await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), {
+      body: commandes,
+    })) as any[];
 
-    console.log(`✅ Successfully reloaded ${data.length} application (/) commands.`);
-  } catch (error) {
-    console.error('❌ Error deploying commands:', error);
+    console.log(`✅ ${donnees.length} commande(s) (/) de l'application rechargée(s) avec succès.`);
+  } catch (erreur) {
+    console.error('❌ Erreur lors du déploiement des commandes :', erreur);
     process.exit(1);
   }
 }
 
-// Run the deployment
-void deployCommands();
+// Exécution du déploiement
+void deployerCommandes();

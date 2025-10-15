@@ -1,54 +1,108 @@
-# Dependencies
-node_modules
-npm-debug.log*
-
-# Environment files
-.env
-.env.local
-.env.*.local
-
-# Development files
-*.log
-logs
-
-# IDE files
-.vscode
-.idea
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
+# Fichiers à ignorer lors du build Docker
 
 # Git
 .git
 .gitignore
+.gitattributes
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+.npm
+.yarn
+
+# TypeScript
+*.ts
+!*.d.ts
+# tsconfig.json - Nécessaire pour le build
+# src/ - Nécessaire pour le build
+
+# Sauf si vous voulez builder dans Docker, commentez src/ ci-dessus
+
+# Tests
+__tests__/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+coverage/
+.nyc_output/
 
 # Documentation
-README.md
-CHANGELOG.md
 docs/
+*.md
+!README.md
+!README.fr.md
 
 # Docker
 docker-compose*.yml
+Dockerfile*
 .dockerignore
 
 # CI/CD
 .github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
 
-# Temporary files
-*.tmp
-*.temp
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vs/
+.editorconfig
 
-# Data files (these should be mounted as volumes)
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.example
+
+# Build artifacts (si build en dehors de Docker)
+dist/
+
+# Data de développement
+# Commentez si vous voulez inclure les données initiales
 data/
-# Exclude JSON data files but keep config files
-*.json
-!package*.json
-!tsconfig*.json
 
-# Testing
-coverage/
-.nyc_output
-test-results/
+# Backups
+backups/
+*.backup
+*.bak
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Scripts de développement
+# scripts/ - Nécessaire pour le démarrage du conteneur
+
+# Divers
+.prettierrc
+.prettierignore
+.eslintrc*
+.eslintignore
+jest.config.js
+.nvmrc
+.editorconfig
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp

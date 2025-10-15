@@ -1,0 +1,126 @@
+name: Release - Publication de Version
+
+# Workflow pour créer des releases avec notes et assets
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    name: Création de la Release
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Historique complet pour le changelog
+
+      - name: 📦 Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📚 Installation et Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: 📦 Création de l'archive de release
+        run: |
+          mkdir -p release
+          tar -czf release/divnum-discord-bot-${{ github.ref_name }}.tar.gz \
+            dist/ \
+            package*.json \
+            README.fr.md \
+            CHANGELOG.md \
+            LICENSE
+          
+          # Créer une archive avec le code source complet
+          tar -czf release/divnum-discord-bot-${{ github.ref_name }}-source.tar.gz \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=dist \
+            .
+
+      - name: 📝 Génération des notes de release
+        id: changelog
+        run: |
+          # Extraire la section du changelog pour cette version
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+          
+          # Créer les notes de release
+          cat > release-notes.md << 'EOF'
+          ## 🎉 Release ${{ github.ref_name }}
+          
+          ### 📦 Téléchargements
+          
+          - **Build compilé :** `divnum-discord-bot-${{ github.ref_name }}.tar.gz`
+          - **Code source :** `divnum-discord-bot-${{ github.ref_name }}-source.tar.gz`
+          
+          ### 🐳 Images Docker
+          
+          ```bash
+          # GitHub Container Registry
+          docker pull ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:${{ github.ref_name }}
+          docker pull ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:latest
+          
+          # Docker Hub (si configuré)
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/divnum-discord-bot:${{ github.ref_name }}
+          ```
+          
+          ### 🚀 Déploiement Rapide
+          
+          **Avec Docker Compose :**
+          ```bash
+          # Créer .env avec vos tokens
+          docker-compose up -d
+          ```
+          
+          ### 📋 Changelog
+          
+          EOF
+          
+          # Ajouter le contenu du CHANGELOG si disponible
+          if [ -f CHANGELOG.md ]; then
+            sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | head -n -1 >> release-notes.md
+          else
+            echo "Voir CHANGELOG.md pour les détails" >> release-notes.md
+          fi
+
+      - name: 🎉 Création de la GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release-notes.md
+          files: |
+            release/*.tar.gz
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📊 Résumé de la Release
+        run: |
+          echo "### 🎉 Release ${{ github.ref_name }} Créée" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag :** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit :** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Fichiers publiés :**" >> $GITHUB_STEP_SUMMARY
+          echo "- divnum-discord-bot-${{ github.ref_name }}.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "- divnum-discord-bot-${{ github.ref_name }}-source.tar.gz" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Images Docker publiées :**" >> $GITHUB_STEP_SUMMARY
+          echo "- ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:latest" >> $GITHUB_STEP_SUMMARY
+
+
+
+

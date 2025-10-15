@@ -1,31 +1,41 @@
 import { config as dotenvConfig } from 'dotenv';
-import type { ConfigType } from '@/types/bot';
+import type { TypeConfiguration } from '@/types/bot';
 
 dotenvConfig();
 
-const requiredEnvVars = ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'] as const;
+/** Variables d'environnement requises pour le fonctionnement du bot */
+const variablesEnvRequises = ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID'] as const;
 
-export function validateEnvironment(): void {
-  const missing = requiredEnvVars.filter(varName => !process.env[varName]);
+/**
+ * Valide que toutes les variables d'environnement requises sont présentes
+ * @throws {Error} Si des variables sont manquantes
+ */
+export function validerEnvironnement(): void {
+  const manquantes = variablesEnvRequises.filter(nomVar => !process.env[nomVar]);
 
-  if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missing.forEach(varName => {
-      console.error(`   - ${varName}`);
+  if (manquantes.length > 0) {
+    console.error("❌ Variables d'environnement requises manquantes :");
+    manquantes.forEach(nomVar => {
+      console.error(`   - ${nomVar}`);
     });
-    console.error('\\nPlease check your .env file and ensure all required variables are set.');
+    console.error(
+      '\nVeuillez vérifier votre fichier .env et assurez-vous que toutes les variables requises sont définies.'
+    );
     process.exit(1);
   }
 
-  console.log('✅ Environment variables validated successfully');
+  console.log("✅ Variables d'environnement validées avec succès");
 }
 
-export const config: ConfigType = {
+/**
+ * Configuration globale de l'application
+ */
+export const config: TypeConfiguration = {
   discord: {
     token: process.env.DISCORD_TOKEN!,
     clientId: process.env.DISCORD_CLIENT_ID!,
   },
   bot: {
-    isDevelopment: process.env.NODE_ENV === 'development',
+    estDeveloppement: process.env.NODE_ENV === 'development',
   },
 };

@@ -1,120 +1,193 @@
 import fs from 'fs';
 import path from 'path';
-import { ExtraActivity, ExtraActivitiesPool } from '@/types/game';
+import { ActiviteExtra, PoolActivitesExtras } from '@/types/game';
 
-const EXTRA_ACTIVITIES_FILE = path.join(process.cwd(), 'data', 'extraActivities.json');
+const FICHIER_ACTIVITES_EXTRAS = path.join(process.cwd(), 'data', 'extraActivities.json');
 
-export class ExtraActivitiesManager {
-  private static instance: ExtraActivitiesManager;
-  private activitiesPool: ExtraActivitiesPool;
+/**
+ * Gestionnaire des activités extras hebdomadaires
+ * Singleton qui gère la persistance et les opérations sur les activités
+ */
+export class GestionnaireActivitesExtras {
+  private static instance: GestionnaireActivitesExtras;
+  private poolActivites: PoolActivitesExtras;
 
   private constructor() {
-    this.activitiesPool = this.loadActivities();
+    this.poolActivites = this.chargerActivites();
   }
 
-  public static getInstance(): ExtraActivitiesManager {
-    if (!ExtraActivitiesManager.instance) {
-      ExtraActivitiesManager.instance = new ExtraActivitiesManager();
+  /**
+   * Récupère l'instance unique du gestionnaire
+   */
+  public static getInstance(): GestionnaireActivitesExtras {
+    if (!GestionnaireActivitesExtras.instance) {
+      GestionnaireActivitesExtras.instance = new GestionnaireActivitesExtras();
     }
-    return ExtraActivitiesManager.instance;
+    return GestionnaireActivitesExtras.instance;
   }
 
-  private loadActivities(): ExtraActivitiesPool {
+  /**
+   * Charge les activités depuis le fichier JSON
+   */
+  private chargerActivites(): PoolActivitesExtras {
     try {
-      if (fs.existsSync(EXTRA_ACTIVITIES_FILE)) {
-        const data = fs.readFileSync(EXTRA_ACTIVITIES_FILE, 'utf-8');
-        const parsed = JSON.parse(data);
+      if (fs.existsSync(FICHIER_ACTIVITES_EXTRAS)) {
+        const donnees = fs.readFileSync(FICHIER_ACTIVITES_EXTRAS, 'utf-8');
+        const parse = JSON.parse(donnees);
         return {
-          activities: parsed.activities.map((activity: any) => ({
-            ...activity,
-            addedAt: new Date(activity.addedAt)
-          }))
+          activites:
+            parse.activities?.map((activite: any) => ({
+              id: activite.id,
+              nom: activite.name,
+              description: activite.description,
+              lieu: activite.location,
+              heure: activite.time,
+              jourSemaine: activite.dayOfWeek,
+              estActif: activite.isActive,
+              ajoutePar: activite.addedBy,
+              ajouteLe: new Date(activite.addedAt),
+            })) || [],
         };
       }
-    } catch (error) {
-      console.error('Error loading extra activities:', error);
+    } catch (erreur) {
+      console.error('Erreur lors du chargement des activités extras :', erreur);
     }
-    
-    return { activities: [] };
+
+    return { activites: [] };
   }
 
-  private saveActivities(): void {
+  /**
+   * Sauvegarde les activités dans le fichier JSON
+   */
+  private sauvegarderActivites(): void {
     try {
-      const dir = path.dirname(EXTRA_ACTIVITIES_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      const repertoire = path.dirname(FICHIER_ACTIVITES_EXTRAS);
+      if (!fs.existsSync(repertoire)) {
+        fs.mkdirSync(repertoire, { recursive: true });
       }
-      fs.writeFileSync(EXTRA_ACTIVITIES_FILE, JSON.stringify(this.activitiesPool, null, 2));
-    } catch (error) {
-      console.error('Error saving extra activities:', error);
+      // Conversion au format anglais pour compatibilité
+      const donnees = {
+        activities: this.poolActivites.activites.map(activite => ({
+          id: activite.id,
+          name: activite.nom,
+          description: activite.description,
+          location: activite.lieu,
+          time: activite.heure,
+          dayOfWeek: activite.jourSemaine,
+          isActive: activite.estActif,
+          addedBy: activite.ajoutePar,
+          addedAt: activite.ajouteLe,
+        })),
+      };
+      fs.writeFileSync(FICHIER_ACTIVITES_EXTRAS, JSON.stringify(donnees, null, 2));
+    } catch (erreur) {
+      console.error('Erreur lors de la sauvegarde des activités extras :', erreur);
     }
   }
 
-  public addActivity(activity: Omit<ExtraActivity, 'id' | 'addedAt'>): ExtraActivity {
-    const newActivity: ExtraActivity = {
-      ...activity,
+  /**
+   * Ajoute une nouvelle activité
+   * @returns L'activité créée avec son ID
+   */
+  public ajouterActivite(activite: Omit<ActiviteExtra, 'id' | 'ajouteLe'>): ActiviteExtra {
+    const nouvelleActivite: ActiviteExtra = {
+      ...activite,
       id: Date.now().toString(),
-      addedAt: new Date()
+      ajouteLe: new Date(),
     };
-    
-    this.activitiesPool.activities.push(newActivity);
-    this.saveActivities();
-    return newActivity;
+
+    this.poolActivites.activites.push(nouvelleActivite);
+    this.sauvegarderActivites();
+    return nouvelleActivite;
   }
 
-  public removeActivity(activityId: string): boolean {
-    const initialLength = this.activitiesPool.activities.length;
-    this.activitiesPool.activities = this.activitiesPool.activities.filter(activity => activity.id !== activityId);
-    
-    if (this.activitiesPool.activities.length < initialLength) {
-      this.saveActivities();
+  /**
+   * Supprime une activité par son ID
+   * @returns true si l'activité a été supprimée, false sinon
+   */
+  public supprimerActivite(idActivite: string): boolean {
+    const longueurInitiale = this.poolActivites.activites.length;
+    this.poolActivites.activites = this.poolActivites.activites.filter(
+      activite => activite.id !== idActivite
+    );
+
+    if (this.poolActivites.activites.length < longueurInitiale) {
+      this.sauvegarderActivites();
       return true;
     }
     return false;
   }
 
-  public toggleActivity(activityId: string): ExtraActivity | null {
-    const activity = this.activitiesPool.activities.find(a => a.id === activityId);
-    if (activity) {
-      activity.isActive = !activity.isActive;
-      this.saveActivities();
-      return activity;
+  /**
+   * Inverse le statut actif/inactif d'une activité
+   * @returns L'activité modifiée ou null si non trouvée
+   */
+  public basculerActivite(idActivite: string): ActiviteExtra | null {
+    const activite = this.poolActivites.activites.find(a => a.id === idActivite);
+    if (activite) {
+      activite.estActif = !activite.estActif;
+      this.sauvegarderActivites();
+      return activite;
     }
     return null;
   }
 
-  public getActivities(): ExtraActivity[] {
-    return [...this.activitiesPool.activities];
+  /**
+   * Récupère toutes les activités
+   */
+  public obtenirActivites(): ActiviteExtra[] {
+    return [...this.poolActivites.activites];
   }
 
-  public getActiveActivities(): ExtraActivity[] {
-    return this.activitiesPool.activities.filter(activity => activity.isActive);
+  /**
+   * Récupère uniquement les activités actives
+   */
+  public obtenirActivitesActives(): ActiviteExtra[] {
+    return this.poolActivites.activites.filter(activite => activite.estActif);
   }
 
-  public getActivitiesForDay(dayOfWeek: number): ExtraActivity[] {
-    return this.activitiesPool.activities.filter(activity => 
-      activity.isActive && activity.dayOfWeek === dayOfWeek
+  /**
+   * Récupère les activités pour un jour spécifique
+   * @param jourSemaine Jour de la semaine (0 = Dimanche, 1 = Lundi, etc.)
+   */
+  public obtenirActivitesPourJour(jourSemaine: number): ActiviteExtra[] {
+    return this.poolActivites.activites.filter(
+      activite => activite.estActif && activite.jourSemaine === jourSemaine
     );
   }
 
-  public findActivity(nameOrId: string): ExtraActivity | undefined {
-    return this.activitiesPool.activities.find(activity => 
-      activity.id === nameOrId || 
-      activity.name.toLowerCase().includes(nameOrId.toLowerCase())
+  /**
+   * Recherche une activité par nom ou ID
+   */
+  public trouverActivite(nomOuId: string): ActiviteExtra | undefined {
+    return this.poolActivites.activites.find(
+      activite =>
+        activite.id === nomOuId || activite.nom.toLowerCase().includes(nomOuId.toLowerCase())
     );
   }
 
-  public getDayName(dayOfWeek: number): string {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek] || 'Unknown';
+  /**
+   * Récupère le nom du jour en français
+   * @param jourSemaine Numéro du jour (0-6)
+   */
+  public obtenirNomJour(jourSemaine: number): string {
+    const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    return jours[jourSemaine] || 'Inconnu';
   }
 
-  public updateActivity(activityId: string, updates: Partial<Omit<ExtraActivity, 'id' | 'addedAt' | 'addedBy'>>): ExtraActivity | null {
-    const activity = this.activitiesPool.activities.find(a => a.id === activityId);
-    if (activity) {
-      Object.assign(activity, updates);
-      this.saveActivities();
-      return activity;
+  /**
+   * Met à jour une activité existante
+   * @returns L'activité mise à jour ou null si non trouvée
+   */
+  public mettreAJourActivite(
+    idActivite: string,
+    miseAJour: Partial<Omit<ActiviteExtra, 'id' | 'ajouteLe' | 'ajoutePar'>>
+  ): ActiviteExtra | null {
+    const activite = this.poolActivites.activites.find(a => a.id === idActivite);
+    if (activite) {
+      Object.assign(activite, miseAJour);
+      this.sauvegarderActivites();
+      return activite;
     }
     return null;
   }

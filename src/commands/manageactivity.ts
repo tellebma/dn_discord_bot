@@ -1,169 +1,200 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
-import { ExtraActivitiesManager } from '@/fonctions/database/extraActivities';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
+import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
 
+/**
+ * Commande pour gérer les activités extras (admin)
+ */
 export const data = new SlashCommandBuilder()
   .setName('manageactivity')
-  .setDescription('Manage extra activities')
-  .addSubcommand(subcommand =>
+  .setDescription('Gérer les activités extras')
+  .addSubcommand((subcommand: any) =>
     subcommand
-      .setName('toggle')
-      .setDescription('Toggle an activity active/inactive')
-      .addStringOption(option =>
-        option.setName('activity')
-          .setDescription('Activity name or ID')
-          .setRequired(true)))
-  .addSubcommand(subcommand =>
+      .setName('basculer')
+      .setDescription('Basculer une activité entre active/inactive')
+      .addStringOption((option: any) =>
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
+  )
+  .addSubcommand((subcommand: any) =>
     subcommand
-      .setName('remove')
-      .setDescription('Remove an activity permanently')
-      .addStringOption(option =>
-        option.setName('activity')
-          .setDescription('Activity name or ID')
-          .setRequired(true)))
-  .addSubcommand(subcommand =>
+      .setName('supprimer')
+      .setDescription('Supprimer définitivement une activité')
+      .addStringOption((option: any) =>
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
+  )
+  .addSubcommand((subcommand: any) =>
     subcommand
-      .setName('edit')
-      .setDescription('Edit an activity')
-      .addStringOption(option =>
-        option.setName('activity')
-          .setDescription('Activity name or ID')
-          .setRequired(true))
-      .addStringOption(option =>
-        option.setName('name')
-          .setDescription('New name for the activity')
-          .setRequired(false))
-      .addStringOption(option =>
-        option.setName('description')
-          .setDescription('New description for the activity')
-          .setRequired(false))
-      .addStringOption(option =>
-        option.setName('location')
-          .setDescription('New location for the activity')
-          .setRequired(false))
-      .addStringOption(option =>
-        option.setName('time')
-          .setDescription('New time for the activity')
-          .setRequired(false))
-      .addIntegerOption(option =>
-        option.setName('day')
-          .setDescription('New day of the week')
+      .setName('modifier')
+      .setDescription('Modifier une activité')
+      .addStringOption((option: any) =>
+        option.setName('activite').setDescription("Nom ou ID de l'activité").setRequired(true)
+      )
+      .addStringOption((option: any) =>
+        option.setName('nom').setDescription("Nouveau nom pour l'activité").setRequired(false)
+      )
+      .addStringOption((option: any) =>
+        option
+          .setName('description')
+          .setDescription("Nouvelle description pour l'activité")
+          .setRequired(false)
+      )
+      .addStringOption((option: any) =>
+        option.setName('lieu').setDescription("Nouveau lieu pour l'activité").setRequired(false)
+      )
+      .addStringOption((option: any) =>
+        option.setName('heure').setDescription("Nouvelle heure pour l'activité").setRequired(false)
+      )
+      .addIntegerOption((option: any) =>
+        option
+          .setName('jour')
+          .setDescription('Nouveau jour de la semaine')
           .setRequired(false)
           .addChoices(
-            { name: 'Sunday', value: 0 },
-            { name: 'Monday', value: 1 },
-            { name: 'Tuesday', value: 2 },
-            { name: 'Wednesday', value: 3 },
-            { name: 'Thursday', value: 4 },
-            { name: 'Friday', value: 5 },
-            { name: 'Saturday', value: 6 }
-          )))
+            { name: 'Dimanche', value: 0 },
+            { name: 'Lundi', value: 1 },
+            { name: 'Mardi', value: 2 },
+            { name: 'Mercredi', value: 3 },
+            { name: 'Jeudi', value: 4 },
+            { name: 'Vendredi', value: 5 },
+            { name: 'Samedi', value: 6 }
+          )
+      )
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
-  const subcommand = interaction.options.data[0].name;
-  const activityInput = interaction.options.get('activity')?.value as string;
-  
-  const activitiesManager = ExtraActivitiesManager.getInstance();
-  const activity = activitiesManager.findActivity(activityInput);
-  
-  if (!activity) {
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const sousCommande = interaction.options.data[0].name;
+  const entreeActivite = interaction.options.get('activite')?.value as string;
+
+  const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
+  const activite = gestionnaireActivites.trouverActivite(entreeActivite);
+
+  if (!activite) {
     await interaction.reply({
-      content: `❌ Activity "${activityInput}" not found!`,
-      ephemeral: true
+      content: `❌ Activité "${entreeActivite}" introuvable !`,
+      ephemeral: true,
     });
     return;
   }
 
-  switch (subcommand) {
-    case 'toggle':
-      const toggledActivity = activitiesManager.toggleActivity(activity.id);
-      if (toggledActivity) {
-        const status = toggledActivity.isActive ? '🟢 Active' : '🔴 Inactive';
+  switch (sousCommande) {
+    case 'basculer': {
+      const activiteBasculee = gestionnaireActivites.basculerActivite(activite.id);
+      if (activiteBasculee) {
+        const statut = activiteBasculee.estActif ? '🟢 Active' : '🔴 Inactive';
         const embed = new EmbedBuilder()
-          .setTitle('✅ Activity Status Updated')
-          .setDescription(`**${toggledActivity.name}** is now ${status}`)
-          .setColor(toggledActivity.isActive ? 0x00FF00 : 0xFF0000)
+          .setTitle("✅ Statut de l'Activité Mis à Jour")
+          .setDescription(`**${activiteBasculee.nom}** est maintenant ${statut}`)
+          .setColor(activiteBasculee.estActif ? 0x00ff00 : 0xff0000)
           .addFields(
-            { name: 'Day', value: activitiesManager.getDayName(toggledActivity.dayOfWeek), inline: true },
-            { name: 'Status', value: status, inline: true }
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activiteBasculee.jourSemaine),
+              inline: true,
+            },
+            { name: 'Statut', value: statut, inline: true }
           )
           .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
-    case 'remove':
-      const removed = activitiesManager.removeActivity(activity.id);
-      if (removed) {
+    case 'supprimer': {
+      const supprimee = gestionnaireActivites.supprimerActivite(activite.id);
+      if (supprimee) {
         const embed = new EmbedBuilder()
-          .setTitle('🗑️ Activity Removed')
-          .setDescription(`**${activity.name}** has been permanently removed from the schedule.`)
-          .setColor(0xFF0000)
+          .setTitle('🗑️ Activité Supprimée')
+          .setDescription(
+            `**${activite.nom}** a été définitivement supprimée de l'emploi du temps.`
+          )
+          .setColor(0xff0000)
           .addFields(
-            { name: 'Day', value: activitiesManager.getDayName(activity.dayOfWeek), inline: true },
-            { name: 'ID', value: activity.id, inline: true }
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activite.jourSemaine),
+              inline: true,
+            },
+            { name: 'ID', value: activite.id, inline: true }
           )
           .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
-    case 'edit':
-      const newName = interaction.options.get('name')?.value as string;
-      const newDescription = interaction.options.get('description')?.value as string;
-      const newLocation = interaction.options.get('location')?.value as string;
-      const newTime = interaction.options.get('time')?.value as string;
-      const newDay = interaction.options.get('day')?.value as number;
+    case 'modifier': {
+      const nouveauNom = interaction.options.get('nom')?.value as string;
+      const nouvelleDescription = interaction.options.get('description')?.value as string;
+      const nouveauLieu = interaction.options.get('lieu')?.value as string;
+      const nouvelleHeure = interaction.options.get('heure')?.value as string;
+      const nouveauJour = interaction.options.get('jour')?.value as number;
 
-      const updates: any = {};
-      if (newName) updates.name = newName;
-      if (newDescription !== undefined) updates.description = newDescription;
-      if (newLocation !== undefined) updates.location = newLocation;
-      if (newTime !== undefined) updates.time = newTime;
-      if (newDay !== undefined) updates.dayOfWeek = newDay;
+      const miseAJour: any = {};
+      if (nouveauNom) miseAJour.nom = nouveauNom;
+      if (nouvelleDescription !== undefined) miseAJour.description = nouvelleDescription;
+      if (nouveauLieu !== undefined) miseAJour.lieu = nouveauLieu;
+      if (nouvelleHeure !== undefined) miseAJour.heure = nouvelleHeure;
+      if (nouveauJour !== undefined) miseAJour.jourSemaine = nouveauJour;
 
-      if (Object.keys(updates).length === 0) {
+      if (Object.keys(miseAJour).length === 0) {
         await interaction.reply({
-          content: '❌ No changes specified! Please provide at least one field to update.',
-          ephemeral: true
+          content:
+            '❌ Aucune modification spécifiée ! Veuillez fournir au moins un champ à mettre à jour.',
+          ephemeral: true,
         });
         return;
       }
 
-      const updatedActivity = activitiesManager.updateActivity(activity.id, updates);
-      if (updatedActivity) {
+      const activiteModifiee = gestionnaireActivites.mettreAJourActivite(activite.id, miseAJour);
+      if (activiteModifiee) {
         const embed = new EmbedBuilder()
-          .setTitle('✅ Activity Updated')
-          .setDescription(`**${updatedActivity.name}** has been updated successfully.`)
-          .setColor(0x00FF00)
+          .setTitle('✅ Activité Mise à Jour')
+          .setDescription(`**${activiteModifiee.nom}** a été mise à jour avec succès.`)
+          .setColor(0x00ff00)
           .addFields(
-            { name: 'Day', value: activitiesManager.getDayName(updatedActivity.dayOfWeek), inline: true },
-            { name: 'Status', value: updatedActivity.isActive ? '🟢 Active' : '🔴 Inactive', inline: true }
+            {
+              name: 'Jour',
+              value: gestionnaireActivites.obtenirNomJour(activiteModifiee.jourSemaine),
+              inline: true,
+            },
+            {
+              name: 'Statut',
+              value: activiteModifiee.estActif ? '🟢 Active' : '🔴 Inactive',
+              inline: true,
+            }
           )
           .setTimestamp();
 
-        if (updatedActivity.description) {
-          embed.addFields({ name: 'Description', value: updatedActivity.description });
-        }
-        
-        if (updatedActivity.location) {
-          embed.addFields({ name: 'Location', value: updatedActivity.location, inline: true });
+        if (activiteModifiee.description) {
+          embed.addFields({ name: 'Description', value: activiteModifiee.description });
         }
 
-        if (updatedActivity.time) {
-          embed.addFields({ name: 'Time', value: updatedActivity.time, inline: true });
+        if (activiteModifiee.lieu) {
+          embed.addFields({ name: 'Lieu', value: activiteModifiee.lieu, inline: true });
         }
-        
+
+        if (activiteModifiee.heure) {
+          embed.addFields({ name: 'Heure', value: activiteModifiee.heure, inline: true });
+        }
+
         await interaction.reply({ embeds: [embed] });
       }
       break;
+    }
 
     default:
       await interaction.reply({
-        content: '❌ Unknown subcommand!',
-        ephemeral: true
+        content: '❌ Sous-commande inconnue !',
+        ephemeral: true,
       });
   }
 }

@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev dependencies)
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY src/ ./src/
@@ -16,8 +16,8 @@ COPY src/ ./src/
 # Build TypeScript
 RUN npm run build
 
-# Production stage  
-FROM node:22-alpine
+# Production stage
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
@@ -25,10 +25,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm install --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+
+# Copy startup script
+COPY scripts/start.sh ./scripts/start.sh
+
+# Make script executable
+RUN chmod +x ./scripts/start.sh
 
 # Create non-root user and set permissions
 RUN addgroup -g 1001 -S nodejs && \
@@ -39,4 +45,4 @@ USER botuser
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start:deploy"]
+CMD ["./scripts/start.sh"]

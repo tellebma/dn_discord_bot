@@ -1,53 +1,84 @@
-import type { LogContext } from '@/types/bot';
+import type { ContexteLog } from '@/types/bot';
 
-export enum LogLevel {
+/** Niveaux de journalisation disponibles */
+export enum NiveauLog {
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
 }
 
-interface LogEntry {
-  timestamp: string;
-  level: string;
+/** Structure d'une entrée de log */
+interface EntreeLog {
+  horodatage: string;
+  niveau: string;
   message: string;
-  [key: string]: any;
+  [cle: string]: any;
 }
 
-export class Logger {
-  private static formatLogEntry(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
+/**
+ * Classe de journalisation pour le bot
+ * Fournit des méthodes de logging structuré avec différents niveaux
+ */
+export class Journaliseur {
+  /**
+   * Formate une entrée de log avec horodatage et contexte
+   */
+  private static formaterEntreeLog(
+    niveau: NiveauLog,
+    message: string,
+    contexte: ContexteLog = {}
+  ): EntreeLog {
     return {
-      timestamp: new Date().toISOString(),
-      level: level.toUpperCase(),
+      horodatage: new Date().toISOString(),
+      niveau: niveau.toUpperCase(),
       message,
-      ...context,
+      ...contexte,
     };
   }
 
-  private static output(logEntry: LogEntry): void {
-    console.log(JSON.stringify(logEntry));
+  /**
+   * Affiche une entrée de log
+   */
+  private static afficher(entreeLog: EntreeLog): void {
+    console.log(JSON.stringify(entreeLog));
   }
 
-  public static log(level: LogLevel, message: string, context: LogContext = {}): void {
-    const logEntry = this.formatLogEntry(level, message, context);
-    this.output(logEntry);
+  /**
+   * Journalise un message avec un niveau spécifique
+   */
+  public static log(niveau: NiveauLog, message: string, contexte: ContexteLog = {}): void {
+    const entreeLog = this.formaterEntreeLog(niveau, message, contexte);
+    this.afficher(entreeLog);
   }
 
-  public static info(message: string, context: LogContext = {}): void {
-    this.log(LogLevel.INFO, message, context);
+  /**
+   * Journalise un message d'information
+   */
+  public static info(message: string, contexte: ContexteLog = {}): void {
+    this.log(NiveauLog.INFO, message, contexte);
   }
 
-  public static warn(message: string, context: LogContext = {}): void {
-    this.log(LogLevel.WARN, message, context);
+  /**
+   * Journalise un avertissement
+   */
+  public static warn(message: string, contexte: ContexteLog = {}): void {
+    this.log(NiveauLog.WARN, message, contexte);
   }
 
-  public static error(message: string, context: LogContext = {}): void {
-    this.log(LogLevel.ERROR, message, context);
+  /**
+   * Journalise une erreur
+   */
+  public static error(message: string, contexte: ContexteLog = {}): void {
+    this.log(NiveauLog.ERROR, message, contexte);
   }
 
-  public static debug(message: string, context: LogContext = {}): void {
+  /**
+   * Journalise un message de débogage (uniquement en mode développement)
+   */
+  public static debug(message: string, contexte: ContexteLog = {}): void {
     if (process.env.NODE_ENV === 'development') {
-      this.log(LogLevel.DEBUG, message, context);
+      this.log(NiveauLog.DEBUG, message, contexte);
     }
   }
 }

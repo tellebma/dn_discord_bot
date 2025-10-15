@@ -1,56 +1,63 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { createStandardCommand } from '@/utils/commandTemplate';
+import { creerCommandeStandard } from '@/utils/commandTemplate';
 import type { ChatInputCommandInteraction, Guild, GuildMember } from 'discord.js';
 
-const commandData = new SlashCommandBuilder()
+/**
+ * Commande pour obtenir les informations sur le serveur
+ */
+const donneesCommande = new SlashCommandBuilder()
   .setName('serverinfo')
-  .setDescription('Get information about this server');
+  .setDescription('Obtenir des informations sur ce serveur');
 
-export default createStandardCommand({
-  name: 'serverinfo',
-  description: 'Get information about this server',
-  category: 'utility',
+export default creerCommandeStandard({
+  nom: 'serverinfo',
+  description: 'Obtenir des informations sur ce serveur',
+  categorie: 'utilitaire',
   permissions: [],
-  cooldown: 5,
-  data: commandData,
-  parameters: [],
-  handler: async (
+  delaiAttente: 5,
+  data: donneesCommande,
+  parametres: [],
+  gestionnaire: async (
     interaction: ChatInputCommandInteraction,
     _params: Record<string, any>
   ): Promise<void> => {
     if (!interaction.guild) {
       await interaction.reply({
-        content: '❌ This command can only be used in a server!',
+        content: '❌ Cette commande ne peut être utilisée que dans un serveur !',
         ephemeral: true,
       });
       return;
     }
 
-    const guild: Guild = interaction.guild;
-    const owner: GuildMember = await guild.fetchOwner();
+    const serveur: Guild = interaction.guild;
+    const proprietaire: GuildMember = await serveur.fetchOwner();
 
     const embed = new EmbedBuilder()
-      .setTitle(`Server Information - ${guild.name}`)
-      .setThumbnail(guild.iconURL({ size: 256 }))
+      .setTitle(`Informations du Serveur - ${serveur.name}`)
+      .setThumbnail(serveur.iconURL({ size: 256 }))
       .setColor('#0099ff')
       .addFields(
-        { name: '👑 Owner', value: owner.user.tag, inline: true },
-        { name: '🆔 Server ID', value: guild.id, inline: true },
+        { name: '👑 Propriétaire', value: proprietaire.user.tag, inline: true },
+        { name: '🆔 ID du Serveur', value: serveur.id, inline: true },
         {
-          name: '📅 Created',
-          value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:F>`,
+          name: '📅 Créé le',
+          value: `<t:${Math.floor(serveur.createdTimestamp / 1000)}:F>`,
           inline: false,
         },
-        { name: '👥 Members', value: `${guild.memberCount}`, inline: true },
-        { name: '📋 Channels', value: `${guild.channels.cache.size}`, inline: true },
-        { name: '🎭 Roles', value: `${guild.roles.cache.size}`, inline: true },
-        { name: '😀 Emojis', value: `${guild.emojis.cache.size}`, inline: true },
-        { name: '🔒 Verification Level', value: guild.verificationLevel.toString(), inline: true },
-        { name: '🛡️ Boost Level', value: `Level ${guild.premiumTier}`, inline: true }
+        { name: '👥 Membres', value: `${serveur.memberCount}`, inline: true },
+        { name: '📋 Canaux', value: `${serveur.channels.cache.size}`, inline: true },
+        { name: '🎭 Rôles', value: `${serveur.roles.cache.size}`, inline: true },
+        { name: '😀 Émojis', value: `${serveur.emojis.cache.size}`, inline: true },
+        {
+          name: '🔒 Niveau de Vérification',
+          value: serveur.verificationLevel.toString(),
+          inline: true,
+        },
+        { name: '🛡️ Niveau de Boost', value: `Niveau ${serveur.premiumTier}`, inline: true }
       );
 
-    if (guild.description) {
-      embed.setDescription(guild.description);
+    if (serveur.description) {
+      embed.setDescription(serveur.description);
     }
 
     await interaction.reply({ embeds: [embed] });

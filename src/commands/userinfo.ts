@@ -1,66 +1,73 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { createStandardCommand } from '@/utils/commandTemplate';
+import { creerCommandeStandard } from '@/utils/commandTemplate';
 import type { ChatInputCommandInteraction, GuildMember, User } from 'discord.js';
 
-const commandData = new SlashCommandBuilder()
+/**
+ * Commande pour obtenir les informations sur un utilisateur
+ */
+const donneesCommande = new SlashCommandBuilder()
   .setName('userinfo')
-  .setDescription('Get information about a user')
-  .addUserOption(option =>
+  .setDescription('Obtenir des informations sur un utilisateur')
+  .addUserOption((option: any) =>
     option
-      .setName('target')
-      .setDescription('The user to get information about')
+      .setName('cible')
+      .setDescription("L'utilisateur dont obtenir les informations")
       .setRequired(false)
   );
 
-export default createStandardCommand({
-  name: 'userinfo',
-  description: 'Get information about a user',
-  category: 'utility',
+export default creerCommandeStandard({
+  nom: 'userinfo',
+  description: 'Obtenir des informations sur un utilisateur',
+  categorie: 'utilitaire',
   permissions: [],
-  cooldown: 3,
-  data: commandData,
-  parameters: [
+  delaiAttente: 3,
+  data: donneesCommande as any,
+  parametres: [
     {
       type: 'user',
-      name: 'target',
-      description: 'The user to get information about',
+      nom: 'cible',
+      name: 'cible',
+      description: "L'utilisateur dont obtenir les informations",
+      requis: false,
       required: false,
     },
   ],
-  handler: async (
+  gestionnaire: async (
     interaction: ChatInputCommandInteraction,
     params: Record<string, any>
   ): Promise<void> => {
-    const targetUser: User = (params.target as User) || interaction.user;
-    const member: GuildMember | null = interaction.guild?.members.cache.get(targetUser.id) ?? null;
+    const utilisateurCible: User = (params.cible as User) || interaction.user;
+    const membre: GuildMember | null =
+      interaction.guild?.members.cache.get(utilisateurCible.id) ?? null;
 
     const embed = new EmbedBuilder()
-      .setTitle(`User Information - ${targetUser.tag}`)
-      .setThumbnail(targetUser.displayAvatarURL({ size: 256 }))
-      .setColor(member?.displayHexColor ?? '#0099ff')
+      .setTitle(`Informations Utilisateur - ${utilisateurCible.tag}`)
+      .setThumbnail(utilisateurCible.displayAvatarURL({ size: 256 }))
+      .setColor(membre?.displayHexColor ?? '#0099ff')
       .addFields(
-        { name: '👤 Username', value: targetUser.tag, inline: true },
-        { name: '🆔 User ID', value: targetUser.id, inline: true },
+        { name: "👤 Nom d'utilisateur", value: utilisateurCible.tag, inline: true },
+        { name: '🆔 ID Utilisateur', value: utilisateurCible.id, inline: true },
         {
-          name: '📅 Account Created',
-          value: `<t:${Math.floor(targetUser.createdTimestamp / 1000)}:F>`,
+          name: '📅 Compte Créé le',
+          value: `<t:${Math.floor(utilisateurCible.createdTimestamp / 1000)}:F>`,
           inline: false,
         }
       );
 
-    if (member) {
-      const roles = member.roles.cache
-        .filter(role => role.name !== '@everyone')
-        .map(role => role.toString())
-        .join(', ') || 'None';
+    if (membre) {
+      const roles =
+        membre.roles.cache
+          .filter((role: any) => role.name !== '@everyone')
+          .map((role: any) => role.toString())
+          .join(', ') || 'Aucun';
 
       embed.addFields(
         {
-          name: '📅 Joined Server',
-          value: `<t:${Math.floor((member.joinedTimestamp ?? 0) / 1000)}:F>`,
+          name: '📅 A Rejoint le Serveur',
+          value: `<t:${Math.floor((membre.joinedTimestamp ?? 0) / 1000)}:F>`,
           inline: false,
         },
-        { name: '🎭 Roles', value: roles, inline: false }
+        { name: '🎭 Rôles', value: roles, inline: false }
       );
     }
 

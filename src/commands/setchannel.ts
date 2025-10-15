@@ -1,41 +1,53 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits, ChannelType } from 'discord.js';
-import { WeeklyPlanner } from '@/fonctions/scheduler/weeklyPlanner';
+import {
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+  ChannelType,
+} from 'discord.js';
+import { PlanificateurHebdomadaire } from '@/fonctions/scheduler/weeklyPlanner';
 
+/**
+ * Commande pour définir le canal des plans hebdomadaires automatiques
+ */
 export const data = new SlashCommandBuilder()
   .setName('setchannel')
-  .setDescription('Set the channel for automatic weekly game plans')
-  .addChannelOption(option =>
-    option.setName('channel')
-      .setDescription('The channel to send weekly plans to')
+  .setDescription('Définir le canal pour les plans de jeux hebdomadaires automatiques')
+  .addChannelOption((option: any) =>
+    option
+      .setName('canal')
+      .setDescription('Le canal où envoyer les plans hebdomadaires')
       .setRequired(true)
-      .addChannelTypes(ChannelType.GuildText))
+      .addChannelTypes(ChannelType.GuildText)
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels);
 
-export async function execute(interaction: CommandInteraction) {
-  const channel = interaction.options.get('channel')?.channel;
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const canal = interaction.options.get('canal')?.channel;
 
-  if (!channel) {
+  if (!canal) {
     await interaction.reply({
-      content: '❌ Please provide a valid text channel!',
-      ephemeral: true
+      content: '❌ Veuillez fournir un canal textuel valide !',
+      ephemeral: true,
     });
     return;
   }
 
   try {
-    const weeklyPlanner = WeeklyPlanner.getInstance(interaction.client);
-    weeklyPlanner.setChannel(channel.id);
-    weeklyPlanner.startScheduler();
+    const planificateur = PlanificateurHebdomadaire.getInstance(interaction.client);
+    planificateur.definirCanal(canal.id, interaction.user.id);
+    planificateur.demarrerPlanificateur();
 
     await interaction.reply({
-      content: `✅ Weekly game plans will now be automatically sent to <#${channel.id}> every Monday at 10 AM!`,
-      ephemeral: true
+      content:
+        `✅ Les plans de jeux hebdomadaires seront maintenant automatiquement envoyés dans <#${canal.id}> chaque lundi à 10h !\n\n` +
+        `📝 Cette configuration est sauvegardée et persistera après un redémarrage du bot.`,
+      ephemeral: true,
     });
-  } catch (error) {
-    console.error('Error setting channel:', error);
+  } catch (erreur) {
+    console.error('Erreur lors de la définition du canal :', erreur);
     await interaction.reply({
-      content: '❌ An error occurred while setting the channel.',
-      ephemeral: true
+      content: "❌ Une erreur s'est produite lors de la définition du canal.",
+      ephemeral: true,
     });
   }
 }

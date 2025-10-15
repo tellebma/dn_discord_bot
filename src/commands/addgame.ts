@@ -1,92 +1,104 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
-import { GamePoolManager } from '@/fonctions/database/gamePool';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 
+/**
+ * Commande pour ajouter un jeu au pool
+ */
 export const data = new SlashCommandBuilder()
   .setName('addgame')
-  .setDescription('Add a game to the pool')
-  .addStringOption(option =>
-    option.setName('name')
-      .setDescription('Name of the game')
-      .setRequired(true))
-  .addStringOption(option =>
-    option.setName('description')
-      .setDescription('Description of the game')
-      .setRequired(false))
-  .addStringOption(option =>
-    option.setName('category')
-      .setDescription('Category of the game (e.g., Strategy, Action, Party)')
-      .setRequired(false))
-  .addIntegerOption(option =>
-    option.setName('minplayers')
-      .setDescription('Minimum number of players')
+  .setDescription('Ajouter un jeu au pool')
+  .addStringOption((option: any) =>
+    option.setName('nom').setDescription('Nom du jeu').setRequired(true)
+  )
+  .addStringOption((option: any) =>
+    option.setName('description').setDescription('Description du jeu').setRequired(false)
+  )
+  .addStringOption((option: any) =>
+    option
+      .setName('categorie')
+      .setDescription('Catégorie du jeu (ex: Stratégie, Action, Party)')
+      .setRequired(false)
+  )
+  .addIntegerOption((option: any) =>
+    option
+      .setName('joueursmin')
+      .setDescription('Nombre minimum de joueurs')
       .setMinValue(1)
-      .setRequired(false))
-  .addIntegerOption(option =>
-    option.setName('maxplayers')
-      .setDescription('Maximum number of players')
+      .setRequired(false)
+  )
+  .addIntegerOption((option: any) =>
+    option
+      .setName('joueursmax')
+      .setDescription('Nombre maximum de joueurs')
       .setMinValue(1)
-      .setRequired(false));
+      .setRequired(false)
+  );
 
-export async function execute(interaction: CommandInteraction) {
-  const name = interaction.options.get('name')?.value as string;
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const nom = interaction.options.get('nom')?.value as string;
   const description = interaction.options.get('description')?.value as string;
-  const category = interaction.options.get('category')?.value as string;
-  const minPlayers = interaction.options.get('minplayers')?.value as number;
-  const maxPlayers = interaction.options.get('maxplayers')?.value as number;
+  const categorie = interaction.options.get('categorie')?.value as string;
+  const joueursMin = interaction.options.get('joueursmin')?.value as number;
+  const joueursMax = interaction.options.get('joueursmax')?.value as number;
 
-  if (minPlayers && maxPlayers && minPlayers > maxPlayers) {
+  // Validation : le minimum ne peut pas être supérieur au maximum
+  if (joueursMin && joueursMax && joueursMin > joueursMax) {
     await interaction.reply({
-      content: '❌ Minimum players cannot be greater than maximum players!',
-      ephemeral: true
+      content: '❌ Le nombre minimum de joueurs ne peut pas être supérieur au nombre maximum !',
+      ephemeral: true,
     });
     return;
   }
 
-  const gamePoolManager = GamePoolManager.getInstance();
-  
-  const existingGame = gamePoolManager.findGame(name);
-  if (existingGame) {
+  const gestionnaireJeux = GestionnairePoolJeux.getInstance();
+
+  // Vérifie si le jeu existe déjà
+  const jeuExistant = gestionnaireJeux.trouverJeu(nom);
+  if (jeuExistant) {
     await interaction.reply({
-      content: `❌ A game with the name "${name}" already exists in the pool!`,
-      ephemeral: true
+      content: `❌ Un jeu avec le nom "${nom}" existe déjà dans le pool !`,
+      ephemeral: true,
     });
     return;
   }
 
-  const newGame = gamePoolManager.addGame({
-    name,
+  // Ajoute le nouveau jeu
+  const nouveauJeu = gestionnaireJeux.ajouterJeu({
+    nom,
     description,
-    category,
-    minPlayers,
-    maxPlayers,
-    addedBy: interaction.user.id
+    categorie,
+    joueursMin,
+    joueursMax,
+    ajoutePar: interaction.user.id,
   });
 
+  // Crée l'embed de confirmation
   const embed = new EmbedBuilder()
-    .setTitle('✅ Game Added Successfully!')
-    .setColor(0x00FF00)
+    .setTitle('✅ Jeu Ajouté avec Succès !')
+    .setColor(0x00ff00)
     .addFields(
-      { name: 'Name', value: newGame.name, inline: true },
-      { name: 'Added by', value: `<@${newGame.addedBy}>`, inline: true },
-      { name: 'Game ID', value: newGame.id, inline: true }
+      { name: 'Nom', value: nouveauJeu.nom, inline: true },
+      { name: 'Ajouté par', value: `<@${nouveauJeu.ajoutePar}>`, inline: true },
+      { name: 'ID du Jeu', value: nouveauJeu.id, inline: true }
     )
     .setTimestamp();
 
-  if (newGame.description) {
-    embed.addFields({ name: 'Description', value: newGame.description });
-  }
-  
-  if (newGame.category) {
-    embed.addFields({ name: 'Category', value: newGame.category, inline: true });
+  if (nouveauJeu.description) {
+    embed.addFields({ name: 'Description', value: nouveauJeu.description });
   }
 
-  if (newGame.minPlayers || newGame.maxPlayers) {
-    const players = newGame.minPlayers && newGame.maxPlayers 
-      ? `${newGame.minPlayers}-${newGame.maxPlayers}` 
-      : newGame.minPlayers 
-      ? `${newGame.minPlayers}+` 
-      : `up to ${newGame.maxPlayers}`;
-    embed.addFields({ name: 'Players', value: players, inline: true });
+  if (nouveauJeu.categorie) {
+    embed.addFields({ name: 'Catégorie', value: nouveauJeu.categorie, inline: true });
+  }
+
+  if (nouveauJeu.joueursMin || nouveauJeu.joueursMax) {
+    const joueurs =
+      nouveauJeu.joueursMin && nouveauJeu.joueursMax
+        ? `${nouveauJeu.joueursMin}-${nouveauJeu.joueursMax}`
+        : nouveauJeu.joueursMin
+          ? `${nouveauJeu.joueursMin}+`
+          : `jusqu'à ${nouveauJeu.joueursMax}`;
+    embed.addFields({ name: 'Joueurs', value: joueurs, inline: true });
   }
 
   await interaction.reply({ embeds: [embed] });
