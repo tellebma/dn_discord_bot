@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { GestionnaireStatistiques } from '@/fonctions/analytics/statsManager';
 
 /**
@@ -20,7 +20,7 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const type = (interaction.options.get('type')?.value as string) || 'overview';
 
   await interaction.deferReply();

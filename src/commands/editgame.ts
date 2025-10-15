@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  CommandInteraction,
+  ChatInputCommandInteraction,
   PermissionFlagsBits,
 } from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
@@ -40,7 +40,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const entreeJeu = interaction.options.get('jeu')?.value as string;
   const nouveauNom = interaction.options.get('nouveau_nom')?.value as string;
   const description = interaction.options.get('description')?.value as string;

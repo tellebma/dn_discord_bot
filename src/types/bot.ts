@@ -27,16 +27,21 @@ export interface ConfigurationCommande {
 export interface ParametreCommande {
   type: TypeParametre;
   nom: string;
+  name: string; // Alias en anglais
   description: string;
   requis?: boolean;
+  required?: boolean; // Alias en anglais
   choix?: ChoixParametre[];
+  choices?: ChoixParametre[]; // Alias en anglais
   validation?: ValidationParametre;
 }
 
 /** Choix disponible pour un paramètre */
 export interface ChoixParametre {
   nom: string;
+  name: string; // Alias en anglais
   valeur: string | number;
+  value: string | number; // Alias en anglais
 }
 
 /** Règles de validation d'un paramètre */
@@ -97,3 +102,8 @@ export interface DelaiAttenteCommande {
   nomCommande: string;
   horodatage: number;
 }
+
+/** Alias pour compatibilité avec les anciens noms */
+export type CommandParameter = ParametreCommande;
+export type ParameterChoice = ChoixParametre;
+export type BotCommand = CommandeBot;

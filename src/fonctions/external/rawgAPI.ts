@@ -47,7 +47,7 @@ export class ClientRAWG {
       const url = `${RAWG_API_BASE}/games?key=${this.apiKey}&dates=${this.obtenirDatesDernierMois()}&ordering=-added&page_size=${limite}`;
 
       const response = await fetch(url);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       if (!data.results) {
         return [];
@@ -80,7 +80,7 @@ export class ClientRAWG {
     try {
       const url = `${RAWG_API_BASE}/games?key=${this.apiKey}&search=${encodeURIComponent(nomJeu)}&page_size=1`;
       const response = await fetch(url);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       if (data.results && data.results.length > 0) {
         return data.results[0];

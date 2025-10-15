@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { PlanificateurHebdomadaire } from '@/fonctions/scheduler/weeklyPlanner';
 
 /**
@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
   .setDescription('Générer et envoyer un plan de jeux hebdomadaire')
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.channelId) {
     await interaction.reply({
       content: '❌ Cette commande doit être utilisée dans un canal !',

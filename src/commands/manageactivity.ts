@@ -1,7 +1,7 @@
 import {
   SlashCommandBuilder,
   EmbedBuilder,
-  CommandInteraction,
+  ChatInputCommandInteraction,
   PermissionFlagsBits,
 } from 'discord.js';
 import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
@@ -68,7 +68,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const sousCommande = interaction.options.data[0].name;
   const entreeActivite = interaction.options.get('activite')?.value as string;
 

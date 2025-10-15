@@ -68,7 +68,7 @@ export class ClientSteam {
       // Utilisation de l'API Steam Store pour la recherche
       const url = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(nomJeu)}&l=french&cc=FR`;
       const response = await fetch(url);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       if (data.items && data.items.length > 0) {
         return data.items[0]; // Premier résultat
@@ -89,7 +89,7 @@ export class ClientSteam {
       // Utilisation de Steam Spy API (gratuit, pas de clé)
       const url = 'https://steamspy.com/api.php?request=top100in2weeks';
       const response = await fetch(url);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       const jeux: JeuTendance[] = Object.values(data)
         .slice(0, limite)

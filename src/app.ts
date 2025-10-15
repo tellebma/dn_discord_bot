@@ -137,7 +137,7 @@ client.on('interactionCreate', async interaction => {
 
   // Gestion des boutons (pour les votes)
   if (interaction.isButton()) {
-    const { GestionnaireVotes } = await import('@/fonctions/voting/voteManager');
+    const { GestionnaireVotes } = await import('./fonctions/voting/voteManager.js');
     const gestionnaireVotes = GestionnaireVotes.getInstance(client);
 
     // Vérifier si c'est un bouton de vote

@@ -158,7 +158,7 @@ export class TemplateCommande {
     if (!interaction.member || !('permissions' in interaction.member)) return false;
 
     return this.permissions.every(permission =>
-      interaction.member?.permissions?.has(permission as PermissionResolvable)
+      (interaction.member?.permissions as any)?.has?.(permission as PermissionResolvable)
     );
   }
 

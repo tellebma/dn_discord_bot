@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
 
 /**
@@ -25,7 +25,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const nombreJeux =
     (interaction.options.get('nombre_jeux')?.value as number) ||
     parseInt(process.env.DEFAULT_VOTE_GAMES_COUNT || '10');

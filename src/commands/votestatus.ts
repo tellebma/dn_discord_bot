@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
 
 /**
@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('votestatus')
   .setDescription('Afficher le statut du vote en cours');
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const gestionnaireVotes = GestionnaireVotes.getInstance(interaction.client);
   const sessionActive = gestionnaireVotes.obtenirSessionActive();
 

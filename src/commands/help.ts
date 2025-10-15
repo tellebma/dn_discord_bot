@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 
 /**
  * Commande d'aide qui explique le fonctionnement du bot
@@ -19,7 +19,7 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const categorie = interaction.options.get('categorie')?.value as string;
 
   // Si une catégorie spécifique est demandée
@@ -112,7 +112,7 @@ export async function execute(interaction: CommandInteraction) {
 /**
  * Envoie l'aide détaillée pour une catégorie spécifique
  */
-async function envoyerAideCategorie(interaction: CommandInteraction, categorie: string) {
+async function envoyerAideCategorie(interaction: ChatInputCommandInteraction, categorie: string) {
   let embed: EmbedBuilder;
 
   switch (categorie) {

@@ -91,7 +91,7 @@ export class GestionnaireVotes {
     const message = await canal.send({
       content: '@here 🗳️ **Nouveau vote pour la semaine prochaine !**',
       embeds: [embed],
-      components: buttons,
+      components: buttons as any,
     });
 
     session.messageId = message.id;
@@ -387,7 +387,7 @@ export class GestionnaireVotes {
    * Génère un plan hebdomadaire avec les jeux votés
    */
   private async genererPlanAvecVotes(
-    canalId: string,
+    _canalId: string,
     idsJeuxSelectionnes: string[]
   ): Promise<void> {
     try {

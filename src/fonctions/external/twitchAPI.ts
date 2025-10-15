@@ -57,7 +57,7 @@ export class ClientTwitch {
         method: 'POST',
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       if (data.access_token) {
         this.accessToken = data.access_token;

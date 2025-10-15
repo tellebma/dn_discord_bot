@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
 
 /**
@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const raison = interaction.options.get('raison')?.value as string;
 
   const gestionnaireVotes = GestionnaireVotes.getInstance(interaction.client);

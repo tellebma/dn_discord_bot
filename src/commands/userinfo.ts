@@ -21,13 +21,15 @@ export default creerCommandeStandard({
   categorie: 'utilitaire',
   permissions: [],
   delaiAttente: 3,
-  data: donneesCommande,
+  data: donneesCommande as any,
   parametres: [
     {
       type: 'user',
       nom: 'cible',
+      name: 'cible',
       description: "L'utilisateur dont obtenir les informations",
       requis: false,
+      required: false,
     },
   ],
   gestionnaire: async (

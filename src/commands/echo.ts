@@ -25,13 +25,15 @@ export default creerCommandeStandard({
   categorie: 'utilitaire',
   permissions: [],
   delaiAttente: 2,
-  data: donneesCommande,
+  data: donneesCommande as any,
   parametres: [
     {
       type: 'string',
       nom: 'message',
+      name: 'message',
       description: 'Le message à répéter',
       requis: true,
+      required: true,
       validation: {
         longueurMin: 1,
         longueurMax: 2000,
@@ -40,8 +42,10 @@ export default creerCommandeStandard({
     {
       type: 'boolean',
       nom: 'ephemere',
+      name: 'ephemere',
       description: 'Si la réponse doit être privée',
       requis: false,
+      required: false,
     },
   ],
   gestionnaire: async (

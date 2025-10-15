@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
 
 /**
@@ -14,7 +14,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(false)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const activesUniquement = (interaction.options.get('activeseulement')?.value as boolean) ?? false;
 
   const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();

@@ -1,6 +1,6 @@
 import {
   SlashCommandBuilder,
-  CommandInteraction,
+  ChatInputCommandInteraction,
   PermissionFlagsBits,
   ChannelType,
 } from 'discord.js';
@@ -21,7 +21,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels);
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const canal = interaction.options.get('canal')?.channel;
 
   if (!canal) {

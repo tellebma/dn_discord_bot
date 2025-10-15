@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder, CommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { GestionnairePoolJeux } from '@/fonctions/database/gamePool';
 
 /**
@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('gamepool')
   .setDescription('Afficher tous les jeux du pool');
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const gestionnaireJeux = GestionnairePoolJeux.getInstance();
   const jeux = gestionnaireJeux.obtenirJeux();
 
