@@ -87,7 +87,7 @@ jobs:
         with:
           images: |
             ${{ env.GHCR_REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-            ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKER_HUB_USERNAME != '' && format('{0}/{1}', env.DOCKER_HUB_USERNAME, env.IMAGE_NAME) || '' }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
