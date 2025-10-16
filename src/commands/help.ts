@@ -417,3 +417,4 @@ function creerAideUtilitaires(): EmbedBuilder {
     .setTimestamp()
     .setFooter({ text: 'Retour : /help' });
 }
+

@@ -58,3 +58,4 @@ export interface DonneesStatistiques {
   votesCasts: { [idUtilisateur: string]: number };
   derniereMAJ: Date;
 }
+
