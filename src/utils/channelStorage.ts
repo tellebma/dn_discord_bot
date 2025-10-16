@@ -113,4 +113,3 @@ export class StockageCanal {
     this.sauvegarderConfig();
   }
 }
-
