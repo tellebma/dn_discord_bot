@@ -1,87 +1,143 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
-import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
+import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 
 /**
- * Commande pour démarrer une session de vote
+ * Commande pour démarrer un vote
  */
 export const data = new SlashCommandBuilder()
   .setName('startvote')
-  .setDescription('Démarrer une session de vote pour choisir les jeux de la semaine')
-  .addIntegerOption((option: any) =>
+  .setDescription('Démarrer un vote pour choisir les jeux')
+  .addIntegerOption(option =>
     option
-      .setName('nombre_jeux')
-      .setDescription('Nombre de jeux à proposer (défaut: 10)')
-      .setMinValue(3)
-      .setMaxValue(20)
+      .setName('nombre')
+      .setDescription('Nombre de jeux à proposer')
       .setRequired(false)
+      .setMinValue(3)
+      .setMaxValue(10)
   )
-  .addIntegerOption((option: any) =>
+  .addIntegerOption(option =>
     option
       .setName('duree')
-      .setDescription('Durée du vote en heures (défaut: 24h)')
+      .setDescription('Durée du vote en heures')
+      .setRequired(false)
       .setMinValue(1)
       .setMaxValue(168)
-      .setRequired(false)
-  )
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+  );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const nombreJeux =
-    (interaction.options.get('nombre_jeux')?.value as number) ||
-    parseInt(process.env.DEFAULT_VOTE_GAMES_COUNT || '10');
-  const duree =
-    (interaction.options.get('duree')?.value as number) ||
-    parseInt(process.env.DEFAULT_VOTE_DURATION || '24');
-
-  if (!interaction.channelId) {
-    await interaction.reply({
-      content: '❌ Cette commande doit être utilisée dans un canal !',
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // Vérifier s'il n'y a pas déjà un vote en cours
-  const gestionnaireVotes = GestionnaireVotes.getInstance(interaction.client);
-  const sessionActive = gestionnaireVotes.obtenirSessionActive();
-
-  if (sessionActive) {
-    await interaction.reply({
-      content:
-        `⚠️ Une session de vote est déjà en cours !\n\n` +
-        `**Semaine :** ${sessionActive.semaine}\n` +
-        `**Fin :** <t:${Math.floor(sessionActive.dateFin.getTime() / 1000)}:R>\n\n` +
-        `Attendez la fin de celle-ci ou utilisez \`/cancelvote\` pour l'annuler.`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  await interaction.deferReply();
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const nombre = interaction.options.getInteger('nombre') ?? 5;
+  const duree = interaction.options.getInteger('duree') ?? 24;
 
   try {
-    const session = await gestionnaireVotes.demarrerSessionVote(
-      interaction.channelId,
-      nombreJeux,
-      duree,
-      interaction.user.id
-    );
+    const gestionnaireVotes = GestionnaireVotes.getInstance();
+    const gestionnaireJeux = GestionnairePoolJeux.getInstance();
 
-    await interaction.editReply({
-      content:
-        `✅ **Session de vote démarrée !**\n\n` +
-        `🗳️ **${nombreJeux} jeux** proposés pour le vote\n` +
-        `⏰ Vote ouvert pendant **${duree}h**\n` +
-        `🏁 Fin du vote : <t:${Math.floor(session.dateFin.getTime() / 1000)}:F>\n\n` +
-        `🔒 **Les votes sont anonymes** - personne ne voit qui vote pour quoi.\n` +
-        `📊 Les **5 jeux les plus votés** seront dans le plan de la semaine.\n` +
-        `🔔 Un rappel sera envoyé **6h avant la fin** du vote.\n\n` +
-        `👉 Votez en cliquant sur les boutons ci-dessous !`,
+    // Vérifier s'il y a déjà un vote actif
+    const voteActif = await gestionnaireVotes.obtenirSessionActive();
+    if (voteActif) {
+      await interaction.reply({
+        content: '❌ Un vote est déjà en cours. Veuillez d\'abord l\'annuler.',
+        flags: 64
+      });
+      return;
+    }
+
+    // Obtenir des jeux aléatoires
+    const jeux = await gestionnaireJeux.obtenirJeuxAleatoires(nombre);
+
+    if (jeux.length < 3) {
+      await interaction.reply({
+        content: '❌ Pas assez de jeux dans le pool. Ajoutez au moins 3 jeux avant de démarrer un vote.',
+        flags: 64
+      });
+      return;
+    }
+
+    // Créer le vote
+    const vote = {
+      id: Date.now().toString(),
+      jeux: jeux.slice(0, nombre),
+      duree: duree,
+      actif: true,
+      creeLe: new Date(),
+      creePar: interaction.user.id,
+      votes: new Map()
+    };
+
+    await gestionnaireVotes.creerVote(vote);
+
+    // Créer l'embed
+    const embed = new EmbedBuilder()
+      .setTitle('🗳️ Vote de jeux démarré !')
+      .setDescription(`Votez pour vos jeux préférés ! Le vote durera **${duree} heures**.`)
+      .setColor('#0099ff')
+      .setTimestamp()
+      .setFooter({ text: `Créé par ${interaction.user.tag}` });
+
+    // Ajouter les jeux à l'embed
+    jeux.forEach((jeu, index) => {
+      embed.addFields({
+        name: `${index + 1}. ${jeu.nom}`,
+        value: `${jeu.description || 'Aucune description'}\n🖥️ ${jeu.plateforme || 'Non spécifié'} | 🎯 ${jeu.genre || 'Non spécifié'}`,
+        inline: false
+      });
     });
-  } catch (erreur) {
-    console.error('Erreur lors du démarrage du vote :', erreur);
-    await interaction.editReply({
-      content: "❌ Erreur lors du démarrage du vote. Vérifiez qu'il y a des jeux dans le pool.",
+
+    // Créer les boutons
+    const row = new ActionRowBuilder<ButtonBuilder>();
+    jeux.forEach((jeu, index) => {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`vote_${vote.id}_${jeu.id}`)
+          .setLabel(`${index + 1}. ${jeu.nom}`)
+          .setStyle(ButtonStyle.Primary)
+      );
+    });
+
+    await interaction.reply({ embeds: [embed], components: [row] });
+
+    // Programmer la fin du vote
+    setTimeout(async () => {
+      const voteFinal = await gestionnaireVotes.obtenirVote(vote.id);
+      if (voteFinal && voteFinal.actif) {
+        // Terminer le vote
+        voteFinal.actif = false;
+        await gestionnaireVotes.creerVote(voteFinal);
+
+        // Afficher les résultats
+        const embedResultats = new EmbedBuilder()
+          .setTitle('🏆 Résultats du vote')
+          .setDescription('Le vote est terminé ! Voici les résultats :')
+          .setColor('#ffd700')
+          .setTimestamp();
+
+        // Trier les jeux par nombre de votes
+        const jeuxTries = jeux.sort((a, b) => {
+          const votesA = voteFinal.votes.get(a.id)?.size || 0;
+          const votesB = voteFinal.votes.get(b.id)?.size || 0;
+          return votesB - votesA;
+        });
+
+        jeuxTries.forEach((jeu, index) => {
+          const votes = voteFinal.votes.get(jeu.id)?.size || 0;
+          embedResultats.addFields({
+            name: `${index + 1}. ${jeu.nom}`,
+            value: `**${votes} vote(s)**`,
+            inline: true
+          });
+        });
+
+        await interaction.followUp({ embeds: [embedResultats] });
+      }
+    }, duree * 60 * 60 * 1000); // Convertir en millisecondes
+
+  } catch (error) {
+    console.error('Erreur lors du démarrage du vote:', error);
+    await interaction.reply({
+      content: '❌ Une erreur est survenue lors du démarrage du vote.',
+      flags: 64
     });
   }
 }
+

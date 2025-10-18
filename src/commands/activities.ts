@@ -1,92 +1,136 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
-import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
+import { GestionnaireActivitesExtras } from '../fonctions/database/extraActivities.js';
 
 /**
- * Commande pour afficher toutes les activités extras
+ * Commande pour gérer les activités extras
  */
 export const data = new SlashCommandBuilder()
   .setName('activities')
-  .setDescription('Afficher toutes les activités extras')
-  .addBooleanOption(option =>
-    option
-      .setName('activeseulement')
-      .setDescription('Afficher uniquement les activités actives (par défaut : non)')
-      .setRequired(false)
+  .setDescription('Gérer les activités extras')
+  .addSubcommand(subcommand =>
+    subcommand
+      .setName('list')
+      .setDescription('Lister toutes les activités')
+      .addBooleanOption(option =>
+        option
+          .setName('actives')
+          .setDescription('Afficher seulement les activités actives')
+          .setRequired(false)
+      )
+  )
+  .addSubcommand(subcommand =>
+    subcommand
+      .setName('add')
+      .setDescription('Ajouter une nouvelle activité')
+      .addStringOption(option =>
+        option
+          .setName('nom')
+          .setDescription('Nom de l\'activité')
+          .setRequired(true)
+      )
+      .addStringOption(option =>
+        option
+          .setName('description')
+          .setDescription('Description de l\'activité')
+          .setRequired(true)
+      )
+  )
+  .addSubcommand(subcommand =>
+    subcommand
+      .setName('remove')
+      .setDescription('Supprimer une activité')
+      .addStringOption(option =>
+        option
+          .setName('id')
+          .setDescription('ID de l\'activité à supprimer')
+          .setRequired(true)
+      )
   );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const activesUniquement = (interaction.options.get('activeseulement')?.value as boolean) ?? false;
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const gestionnaire = GestionnaireActivitesExtras.getInstance();
+  const subcommand = interaction.options.getSubcommand();
 
-  const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
-  const activites = activesUniquement
-    ? gestionnaireActivites.obtenirActivitesActives()
-    : gestionnaireActivites.obtenirActivites();
+  try {
+    switch (subcommand) {
+      case 'list': {
+        const activesUniquement = interaction.options.getBoolean('actives') ?? false;
+        const activites = await gestionnaire.obtenirActivites(activesUniquement);
 
-  if (activites.length === 0) {
-    const message = activesUniquement
-      ? 'Aucune activité extra active trouvée ! Utilisez `/addactivity` pour en ajouter.'
-      : 'Aucune activité extra trouvée ! Utilisez `/addactivity` pour en ajouter.';
+        const embed = new EmbedBuilder()
+          .setTitle('📋 Liste des activités')
+          .setColor('#0099ff')
+          .setTimestamp();
 
-    await interaction.reply({
-      content: message,
-      ephemeral: true,
-    });
-    return;
-  }
+        if (activites.length === 0) {
+          embed.setDescription('Aucune activité trouvée.');
+        } else {
+          const liste = activites.map((activite, index) => 
+            `**${index + 1}.** ${activite.nom} - ${activite.description || 'Aucune description'}`
+          ).join('\n');
+          embed.setDescription(liste);
+        }
 
-  const embed = new EmbedBuilder()
-    .setTitle('📅 Activités Extras')
-    .setDescription(
-      `${activesUniquement ? 'Activités actives' : 'Toutes les activités'} : ${activites.length}`
-    )
-    .setColor(0x9966ff)
-    .setTimestamp();
+        await interaction.reply({ embeds: [embed], flags: 64 });
+        break;
+      }
 
-  // Regroupe les activités par jour
-  const groupesJours: { [cle: number]: any[] } = {};
+      case 'add': {
+        const nom = interaction.options.getString('nom', true);
+        const description = interaction.options.getString('description', true);
 
-  activites.forEach(activite => {
-    if (!groupesJours[activite.jourSemaine]) {
-      groupesJours[activite.jourSemaine] = [];
+        const nouvelleActivite = {
+          id: Date.now().toString(),
+          nom,
+          description,
+          actif: true,
+          creeeLe: new Date()
+        };
+
+        await gestionnaire.ajouterActivite(nouvelleActivite);
+
+        const embed = new EmbedBuilder()
+          .setTitle('✅ Activité ajoutée')
+          .setDescription(`**${nom}** a été ajoutée avec succès !`)
+          .setColor('#00ff00')
+          .setTimestamp();
+
+        await interaction.reply({ embeds: [embed], flags: 64 });
+        break;
+      }
+
+      case 'remove': {
+        const id = interaction.options.getString('id', true);
+        const supprimee = await gestionnaire.supprimerActivite(id);
+
+        if (supprimee) {
+          const embed = new EmbedBuilder()
+            .setTitle('✅ Activité supprimée')
+            .setDescription(`L'activité avec l'ID **${id}** a été supprimée.`)
+            .setColor('#00ff00')
+            .setTimestamp();
+
+          await interaction.reply({ embeds: [embed], flags: 64 });
+        } else {
+          await interaction.reply({
+            content: `❌ Aucune activité trouvée avec l'ID **${id}**.`,
+            flags: 64
+          });
+        }
+        break;
+      }
+
+      default:
+        await interaction.reply({
+          content: '❌ Sous-commande inconnue.',
+          flags: 64
+        });
     }
-    groupesJours[activite.jourSemaine].push(activite);
-  });
-
-  // Trie les jours du dimanche (0) au samedi (6)
-  const joursTries = Object.keys(groupesJours).map(Number).sort();
-
-  joursTries.forEach(jourSemaine => {
-    const nomJour = gestionnaireActivites.obtenirNomJour(jourSemaine);
-    const activitesJour = groupesJours[jourSemaine];
-
-    const listeActivites = activitesJour
-      .map(activite => {
-        let infoActivite = `${activite.estActif ? '🟢' : '🔴'} **${activite.nom}**`;
-
-        if (activite.heure) {
-          infoActivite += ` • ${activite.heure}`;
-        }
-
-        if (activite.lieu) {
-          infoActivite += ` • 📍 ${activite.lieu}`;
-        }
-
-        if (activite.description) {
-          infoActivite += `\n   ${activite.description}`;
-        }
-
-        infoActivite += `\n   *ID : ${activite.id}*`;
-
-        return infoActivite;
-      })
-      .join('\n\n');
-
-    embed.addFields({
-      name: `${nomJour} (${activitesJour.length})`,
-      value: listeActivites,
-      inline: false,
+  } catch (error) {
+    console.error('Erreur dans la commande activities:', error);
+    await interaction.reply({
+      content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
+      flags: 64
     });
-  });
-
-  await interaction.reply({ embeds: [embed] });
+  }
 }

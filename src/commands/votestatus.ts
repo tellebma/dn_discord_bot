@@ -1,63 +1,79 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
-import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
+import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 
 /**
- * Commande pour voir le statut du vote en cours
+ * Commande pour afficher le statut du vote
  */
 export const data = new SlashCommandBuilder()
   .setName('votestatus')
   .setDescription('Afficher le statut du vote en cours');
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const gestionnaireVotes = GestionnaireVotes.getInstance(interaction.client);
-  const sessionActive = gestionnaireVotes.obtenirSessionActive();
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  try {
+    const gestionnaireVotes = GestionnaireVotes.getInstance();
+    const voteActif = await gestionnaireVotes.obtenirSessionActive();
 
-  if (!sessionActive) {
+    if (!voteActif) {
+      await interaction.reply({
+        content: '❌ Aucun vote actif trouvé.',
+        flags: 64
+      });
+      return;
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle('🗳️ Statut du vote')
+      .setColor('#0099ff')
+      .setTimestamp();
+
+    // Calculer le temps restant
+    const maintenant = new Date();
+    const dureeMs = voteActif.duree * 60 * 60 * 1000;
+    const finVote = new Date(voteActif.creeLe.getTime() + dureeMs);
+    const tempsRestant = finVote.getTime() - maintenant.getTime();
+
+    if (tempsRestant <= 0) {
+      embed.setDescription('⏰ Le vote est terminé.');
+    } else {
+      const heures = Math.floor(tempsRestant / (1000 * 60 * 60));
+      const minutes = Math.floor((tempsRestant % (1000 * 60 * 60)) / (1000 * 60));
+      embed.setDescription(`⏰ Temps restant : **${heures}h ${minutes}m**`);
+    }
+
+    // Afficher les jeux et leurs votes
+    const jeuxAvecVotes = voteActif.jeux.map((jeu: any) => {
+      const votes = voteActif.votes.get(jeu.id)?.size || 0;
+      return {
+        nom: jeu.nom,
+        votes: votes
+      };
+    }).sort((a: any, b: any) => b.votes - a.votes);
+
+    embed.addFields(
+      { name: '📅 Créé le', value: voteActif.creeLe.toLocaleString(), inline: true },
+      { name: '⏱️ Durée', value: `${voteActif.duree} heures`, inline: true },
+      { name: '👤 Créé par', value: `<@${voteActif.creePar}>`, inline: true }
+    );
+
+    // Afficher les résultats
+    if (jeuxAvecVotes.length > 0) {
+      const resultats = jeuxAvecVotes.map((jeu: any, index: number) => 
+        `**${index + 1}.** ${jeu.nom} - **${jeu.votes} vote(s)**`
+      ).join('\n');
+      
+      embed.addFields({
+        name: '📊 Résultats actuels',
+        value: resultats,
+        inline: false
+      });
+    }
+
+    await interaction.reply({ embeds: [embed], flags: 64 });
+  } catch (error) {
+    console.error('Erreur lors de l\'affichage du statut du vote:', error);
     await interaction.reply({
-      content:
-        '📭 Aucune session de vote en cours.\n\n' +
-        '💡 Les admins peuvent démarrer un vote avec `/startvote`',
-      ephemeral: true,
+      content: '❌ Une erreur est survenue lors de l\'affichage du statut du vote.',
+      flags: 64
     });
-    return;
   }
-
-  const totalVotes = Array.from(sessionActive.votes.values()).reduce(
-    (sum, v) => sum + v.votesUtilisateurs.length,
-    0
-  );
-
-  const tempsRestant = sessionActive.dateFin.getTime() - Date.now();
-  const heuresRestantes = Math.max(0, Math.floor(tempsRestant / (1000 * 60 * 60)));
-  const minutesRestantes = Math.max(0, Math.floor((tempsRestant % (1000 * 60 * 60)) / (1000 * 60)));
-
-  const embed = new EmbedBuilder()
-    .setTitle('🗳️ Statut du Vote en Cours')
-    .setDescription(
-      `**Semaine :** ${sessionActive.semaine}\n` +
-        `**Démarré le :** <t:${Math.floor(sessionActive.dateDebut.getTime() / 1000)}:F>\n` +
-        `**Fin :** <t:${Math.floor(sessionActive.dateFin.getTime() / 1000)}:F>\n` +
-        `**Temps restant :** ${heuresRestantes}h ${minutesRestantes}min`
-    )
-    .setColor(0x9966ff)
-    .addFields(
-      {
-        name: '🎮 Jeux Proposés',
-        value: sessionActive.jeuxProposes.length.toString(),
-        inline: true,
-      },
-      { name: '📊 Total Votes', value: totalVotes.toString(), inline: true },
-      { name: '🔒 Anonymat', value: 'Garanti', inline: true }
-    )
-    .addFields({
-      name: '💡 Comment voter ?',
-      value:
-        `Cliquez sur le bouton du jeu de votre choix dans le message de vote ci-dessus.\n\n` +
-        `🔒 Votre vote est **100% anonyme** - personne ne peut voir qui vote pour quoi.\n` +
-        `🔄 Vous pouvez changer votre vote à tout moment avant la fin.`,
-      inline: false,
-    })
-    .setTimestamp();
-
-  await interaction.reply({ embeds: [embed], ephemeral: true });
 }
