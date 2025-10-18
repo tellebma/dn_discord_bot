@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A Discord bot template with TypeScript, featuring advanced command system and modern development practices",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
@@ -30,7 +31,8 @@
   "license": "MIT",
   "dependencies": {
     "discord.js": "^14.17.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

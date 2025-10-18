@@ -1,8 +1,13 @@
 import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
 import { readdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { config as dotenvConfig } from 'dotenv';
-import type { CommandeBot, ClientEtendu } from '@/types/bot';
+import type { CommandeBot, ClientEtendu } from './types/bot.js';
+import { GestionnaireVotes } from './fonctions/voting/voteManager.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenvConfig();
 
@@ -22,7 +27,7 @@ async function chargerCommandes(): Promise<void> {
 
   try {
     const fichiersCommandes = readdirSync(cheminCommandes).filter(
-      fichier => fichier.endsWith('.ts') || fichier.endsWith('.js')
+      fichier => (fichier.endsWith('.ts') || fichier.endsWith('.js')) && !fichier.endsWith('.d.ts')
     );
 
     for (const fichier of fichiersCommandes) {
@@ -48,7 +53,6 @@ async function chargerCommandes(): Promise<void> {
     }
   } catch {
     console.log('Répertoire des commandes introuvable, création en cours...');
-    // Dans une vraie implémentation, vous pourriez créer le répertoire ici
   }
 
   // Déploiement des commandes
@@ -65,7 +69,7 @@ async function chargerEvenements(): Promise<void> {
 
   try {
     const fichiersEvenements = readdirSync(cheminEvenements).filter(
-      fichier => fichier.endsWith('.ts') || fichier.endsWith('.js')
+      fichier => (fichier.endsWith('.ts') || fichier.endsWith('.js')) && !fichier.endsWith('.d.ts')
     );
 
     for (const fichier of fichiersEvenements) {
@@ -80,6 +84,7 @@ async function chargerEvenements(): Promise<void> {
         } else {
           client.on(evenement.name, (...args: any[]) => evenement.execute(...args));
         }
+
         console.log(`✅ Événement chargé : ${evenement.name}`);
       } catch (erreur) {
         console.error(`❌ Erreur lors du chargement de l'événement ${fichier} :`, erreur);
@@ -91,21 +96,22 @@ async function chargerEvenements(): Promise<void> {
 }
 
 /**
- * Déploie les commandes sur Discord
+ * Déploie les commandes slash sur Discord
  */
 async function deployerCommandes(commandes: any[]): Promise<void> {
   if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
-    throw new Error(
-      "Variables d'environnement requises manquantes : DISCORD_TOKEN ou DISCORD_CLIENT_ID"
-    );
+    console.log('❌ DISCORD_TOKEN ou DISCORD_CLIENT_ID manquant, déploiement des commandes ignoré');
+    return;
   }
 
-  const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
   try {
     console.log("🔄 Début de l'actualisation des commandes (/) de l'application.");
 
-    await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: commandes });
+    await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), {
+      body: commandes,
+    });
 
     console.log("✅ Les commandes (/) de l'application ont été rechargées avec succès.");
   } catch (erreur) {
@@ -114,7 +120,7 @@ async function deployerCommandes(commandes: any[]): Promise<void> {
 }
 
 // Gestion des interactions (commandes, autocomplétion, boutons)
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction: any) => {
   // Gestion de l'autocomplétion
   if (interaction.isAutocomplete()) {
     const commande = client.commands.get(interaction.commandName);
@@ -137,38 +143,38 @@ client.on('interactionCreate', async interaction => {
 
   // Gestion des boutons (pour les votes)
   if (interaction.isButton()) {
-    const { GestionnaireVotes } = await import('./fonctions/voting/voteManager.js');
-    const gestionnaireVotes = GestionnaireVotes.getInstance(client);
-
-    // Vérifier si c'est un bouton de vote
-    if (interaction.customId.startsWith('vote_')) {
-      const idJeu = interaction.customId.replace('vote_', '');
-      const sessionActive = gestionnaireVotes.obtenirSessionActive();
-
-      if (sessionActive) {
-        const voteEnregistre = await gestionnaireVotes.gererVote(
-          sessionActive.id,
-          idJeu,
-          interaction.user.id
-        );
-
-        if (voteEnregistre) {
+    const customId = interaction.customId;
+    
+    if (customId.startsWith('vote_')) {
+      const [, voteId, jeuId] = customId.split('_');
+      
+      try {
+        const gestionnaireVotes = GestionnaireVotes.getInstance();
+        const success = await gestionnaireVotes.gererVote(voteId, jeuId, interaction.user.id);
+        
+        if (success) {
           await interaction.reply({
-            content: '✅ Votre vote a été enregistré de manière anonyme !',
-            ephemeral: true,
+            content: "✅ Votre vote a été enregistré !",
+            flags: 64,
           });
         } else {
           await interaction.reply({
-            content: "❌ Erreur lors de l'enregistrement de votre vote.",
-            ephemeral: true,
+            content: "❌ Impossible d'enregistrer votre vote. Le vote n'est peut-être plus actif.",
+            flags: 64,
           });
         }
-      } else {
+      } catch (error) {
+        console.error('Erreur lors du vote:', error);
         await interaction.reply({
-          content: "❌ Cette session de vote n'est plus active.",
-          ephemeral: true,
+          content: "❌ Une erreur est survenue lors de l'enregistrement de votre vote.",
+          flags: 64,
         });
       }
+    } else {
+      await interaction.reply({
+        content: "❌ Interaction de bouton non reconnue.",
+        flags: 64,
+      });
     }
     return;
   }
@@ -190,7 +196,7 @@ client.on('interactionCreate', async interaction => {
 
     const messageErreur = {
       content: "Une erreur s'est produite lors de l'exécution de cette commande !",
-      ephemeral: true,
+      flags: 64,
     };
 
     if (interaction.replied || interaction.deferred) {
@@ -202,13 +208,13 @@ client.on('interactionCreate', async interaction => {
 });
 
 // Événement déclenché une fois que le bot est prêt
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`🤖 Le bot est prêt ! Connecté en tant que ${client.user?.tag}`);
 });
 
 // Gestionnaires d'erreurs globaux
 process.on('unhandledRejection', (erreur: Error) => {
-  console.error('Rejet de promesse non géré :', erreur);
+  console.error('Erreur non gérée :', erreur);
 });
 
 process.on('uncaughtException', (erreur: Error) => {

@@ -1,84 +1,40 @@
-import type { ContexteLog } from '@/types/bot';
-
-/** Niveaux de journalisation disponibles */
-export enum NiveauLog {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-}
-
-/** Structure d'une entrée de log */
-interface EntreeLog {
-  horodatage: string;
-  niveau: string;
-  message: string;
-  [cle: string]: any;
-}
-
 /**
- * Classe de journalisation pour le bot
- * Fournit des méthodes de logging structuré avec différents niveaux
+ * Système de logs
  */
-export class Journaliseur {
-  /**
-   * Formate une entrée de log avec horodatage et contexte
-   */
-  private static formaterEntreeLog(
-    niveau: NiveauLog,
-    message: string,
-    contexte: ContexteLog = {}
-  ): EntreeLog {
-    return {
-      horodatage: new Date().toISOString(),
-      niveau: niveau.toUpperCase(),
-      message,
-      ...contexte,
-    };
+export class Logger {
+  private static instance: Logger;
+  private niveau: string;
+
+  private constructor() {
+    this.niveau = process.env.LOG_LEVEL || 'info';
   }
 
-  /**
-   * Affiche une entrée de log
-   */
-  private static afficher(entreeLog: EntreeLog): void {
-    console.log(JSON.stringify(entreeLog));
+  public static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
   }
 
-  /**
-   * Journalise un message avec un niveau spécifique
-   */
-  public static log(niveau: NiveauLog, message: string, contexte: ContexteLog = {}): void {
-    const entreeLog = this.formaterEntreeLog(niveau, message, contexte);
-    this.afficher(entreeLog);
+  public info(message: string, ...args: any[]): void {
+    if (this.niveau === 'debug' || this.niveau === 'info') {
+      console.log(`[INFO] ${message}`, ...args);
+    }
   }
 
-  /**
-   * Journalise un message d'information
-   */
-  public static info(message: string, contexte: ContexteLog = {}): void {
-    this.log(NiveauLog.INFO, message, contexte);
+  public warn(message: string, ...args: any[]): void {
+    if (this.niveau === 'debug' || this.niveau === 'info' || this.niveau === 'warn') {
+      console.warn(`[WARN] ${message}`, ...args);
+    }
   }
 
-  /**
-   * Journalise un avertissement
-   */
-  public static warn(message: string, contexte: ContexteLog = {}): void {
-    this.log(NiveauLog.WARN, message, contexte);
+  public error(message: string, ...args: any[]): void {
+    console.error(`[ERROR] ${message}`, ...args);
   }
 
-  /**
-   * Journalise une erreur
-   */
-  public static error(message: string, contexte: ContexteLog = {}): void {
-    this.log(NiveauLog.ERROR, message, contexte);
-  }
-
-  /**
-   * Journalise un message de débogage (uniquement en mode développement)
-   */
-  public static debug(message: string, contexte: ContexteLog = {}): void {
-    if (process.env.NODE_ENV === 'development') {
-      this.log(NiveauLog.DEBUG, message, contexte);
+  public debug(message: string, ...args: any[]): void {
+    if (this.niveau === 'debug') {
+      console.log(`[DEBUG] ${message}`, ...args);
     }
   }
 }

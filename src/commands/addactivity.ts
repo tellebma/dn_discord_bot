@@ -1,106 +1,73 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
-import { GestionnaireActivitesExtras } from '@/fonctions/database/extraActivities';
+import { GestionnaireActivitesExtras } from '../fonctions/database/extraActivities.js';
 
 /**
- * Commande pour ajouter une activité extra à l'emploi du temps hebdomadaire
+ * Commande pour ajouter une activité
  */
 export const data = new SlashCommandBuilder()
   .setName('addactivity')
-  .setDescription("Ajouter une activité extra à l'emploi du temps hebdomadaire")
-  .addStringOption((option: any) =>
-    option.setName('nom').setDescription("Nom de l'activité").setRequired(true)
-  )
-  .addIntegerOption((option: any) =>
+  .setDescription('Ajouter une nouvelle activité extra')
+  .addStringOption(option =>
     option
-      .setName('jour')
-      .setDescription('Jour de la semaine pour cette activité')
+      .setName('nom')
+      .setDescription('Nom de l\'activité')
       .setRequired(true)
-      .addChoices(
-        { name: 'Dimanche', value: 0 },
-        { name: 'Lundi', value: 1 },
-        { name: 'Mardi', value: 2 },
-        { name: 'Mercredi', value: 3 },
-        { name: 'Jeudi', value: 4 },
-        { name: 'Vendredi', value: 5 },
-        { name: 'Samedi', value: 6 }
-      )
+      .setMaxLength(100)
   )
-  .addStringOption((option: any) =>
-    option.setName('description').setDescription("Description de l'activité").setRequired(false)
-  )
-  .addStringOption((option: any) =>
-    option.setName('lieu').setDescription("Lieu de l'activité").setRequired(false)
-  )
-  .addStringOption((option: any) =>
+  .addStringOption(option =>
     option
-      .setName('heure')
-      .setDescription('Heure de l\'activité (ex: "18:00" ou "18h")')
-      .setRequired(false)
+      .setName('description')
+      .setDescription('Description de l\'activité')
+      .setRequired(true)
+      .setMaxLength(500)
   )
-  .addBooleanOption((option: any) =>
+  .addStringOption(option =>
     option
-      .setName('actif')
-      .setDescription("Si l'activité est active (par défaut : oui)")
+      .setName('categorie')
+      .setDescription('Catégorie de l\'activité')
       .setRequired(false)
+      .setMaxLength(50)
   );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const nom = interaction.options.get('nom')?.value as string;
-  const jourSemaine = interaction.options.get('jour')?.value as number;
-  const description = interaction.options.get('description')?.value as string;
-  const lieu = interaction.options.get('lieu')?.value as string;
-  const heure = interaction.options.get('heure')?.value as string;
-  const estActif = (interaction.options.get('actif')?.value as boolean) ?? true;
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const nom = interaction.options.getString('nom', true);
+  const description = interaction.options.getString('description', true);
+  const categorie = interaction.options.getString('categorie') || 'Général';
 
-  const gestionnaireActivites = GestionnaireActivitesExtras.getInstance();
+  try {
+    const gestionnaire = GestionnaireActivitesExtras.getInstance();
+    
+    const nouvelleActivite = {
+      id: Date.now().toString(),
+      nom,
+      description,
+      categorie,
+      actif: true,
+      creeeLe: new Date(),
+      creeePar: interaction.user.id
+    };
 
-  // Vérifie si l'activité existe déjà
-  const activiteExistante = gestionnaireActivites.trouverActivite(nom);
-  if (activiteExistante) {
+    await gestionnaire.ajouterActivite(nouvelleActivite);
+
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Activité ajoutée avec succès !')
+      .setDescription(`**${nom}** a été ajoutée à la liste des activités.`)
+      .addFields(
+        { name: '📝 Description', value: description, inline: false },
+        { name: '🏷️ Catégorie', value: categorie, inline: true },
+        { name: '🆔 ID', value: nouvelleActivite.id, inline: true }
+      )
+      .setColor('#00ff00')
+      .setTimestamp()
+      .setFooter({ text: `Ajoutée par ${interaction.user.tag}` });
+
+    await interaction.reply({ embeds: [embed], flags: 64 });
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout d\'activité:', error);
     await interaction.reply({
-      content: `❌ Une activité avec le nom "${nom}" existe déjà !`,
-      ephemeral: true,
+      content: '❌ Une erreur est survenue lors de l\'ajout de l\'activité.',
+      flags: 64
     });
-    return;
   }
-
-  // Ajoute la nouvelle activité
-  const nouvelleActivite = gestionnaireActivites.ajouterActivite({
-    nom,
-    description,
-    lieu,
-    heure,
-    jourSemaine,
-    estActif,
-    ajoutePar: interaction.user.id,
-  });
-
-  const nomJour = gestionnaireActivites.obtenirNomJour(jourSemaine);
-
-  // Crée l'embed de confirmation
-  const embed = new EmbedBuilder()
-    .setTitle('✅ Activité Ajoutée avec Succès !')
-    .setColor(estActif ? 0x00ff00 : 0xffaa00)
-    .addFields(
-      { name: 'Nom', value: nouvelleActivite.nom, inline: true },
-      { name: 'Jour', value: nomJour, inline: true },
-      { name: 'Statut', value: estActif ? '🟢 Active' : '🟡 Inactive', inline: true },
-      { name: 'Ajoutée par', value: `<@${nouvelleActivite.ajoutePar}>`, inline: true },
-      { name: "ID de l'Activité", value: nouvelleActivite.id, inline: true }
-    )
-    .setTimestamp();
-
-  if (nouvelleActivite.description) {
-    embed.addFields({ name: 'Description', value: nouvelleActivite.description });
-  }
-
-  if (nouvelleActivite.lieu) {
-    embed.addFields({ name: 'Lieu', value: nouvelleActivite.lieu, inline: true });
-  }
-
-  if (nouvelleActivite.heure) {
-    embed.addFields({ name: 'Heure', value: nouvelleActivite.heure, inline: true });
-  }
-
-  await interaction.reply({ embeds: [embed] });
 }
+

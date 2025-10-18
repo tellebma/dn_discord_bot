@@ -106,7 +106,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     inline: false,
   });
 
-  await interaction.reply({ embeds: [embedPrincipal], ephemeral: true });
+  await interaction.reply({ embeds: [embedPrincipal], flags: 64 });
 }
 
 /**
@@ -131,12 +131,12 @@ async function envoyerAideCategorie(interaction: ChatInputCommandInteraction, ca
     default:
       await interaction.reply({
         content: '❌ Catégorie inconnue !',
-        ephemeral: true,
+        flags: 64,
       });
       return;
   }
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: 64 });
 }
 
 /**
@@ -417,3 +417,4 @@ function creerAideUtilitaires(): EmbedBuilder {
     .setTimestamp()
     .setFooter({ text: 'Retour : /help' });
 }
+

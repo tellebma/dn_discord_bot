@@ -1,52 +1,69 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
-import { GestionnaireVotes } from '@/fonctions/voting/voteManager';
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 
 /**
- * Commande pour annuler une session de vote en cours
+ * Commande pour annuler un vote
  */
 export const data = new SlashCommandBuilder()
   .setName('cancelvote')
-  .setDescription('Annuler la session de vote en cours')
-  .addStringOption((option: any) =>
-    option.setName('raison').setDescription("Raison de l'annulation (optionnel)").setRequired(false)
-  )
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
+  .setDescription('Annuler le vote en cours')
+  .addBooleanOption(option =>
+    option
+      .setName('confirmer')
+      .setDescription('Confirmer l\'annulation')
+      .setRequired(true)
+  );
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const raison = interaction.options.get('raison')?.value as string;
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const confirmer = interaction.options.getBoolean('confirmer', true);
 
-  const gestionnaireVotes = GestionnaireVotes.getInstance(interaction.client);
-  const sessionActive = gestionnaireVotes.obtenirSessionActive();
-
-  if (!sessionActive) {
+  if (!confirmer) {
     await interaction.reply({
-      content: '❌ Aucune session de vote en cours à annuler.',
-      ephemeral: true,
+      content: '❌ Annulation du vote annulée. Veuillez confirmer l\'annulation.',
+      flags: 64
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
-
   try {
-    const annulee = await gestionnaireVotes.annulerSessionVote(sessionActive.id, raison);
+    const gestionnaireVotes = GestionnaireVotes.getInstance();
+    const voteActif = await gestionnaireVotes.obtenirSessionActive();
 
-    if (annulee) {
-      await interaction.editReply({
-        content:
-          `✅ Session de vote annulée avec succès.\n\n` +
-          `**Semaine :** ${sessionActive.semaine}\n` +
-          (raison ? `**Raison :** ${raison}` : ''),
+    if (!voteActif) {
+      await interaction.reply({
+        content: '❌ Aucun vote actif trouvé.',
+        flags: 64
       });
+      return;
+    }
+
+    const success = await gestionnaireVotes.supprimerVote(voteActif.id);
+
+    if (success) {
+      const embed = new EmbedBuilder()
+        .setTitle('❌ Vote annulé')
+        .setDescription('Le vote en cours a été annulé avec succès.')
+        .addFields(
+          { name: '🆔 ID du vote', value: voteActif.id, inline: true },
+          { name: '📅 Créé le', value: voteActif.creeLe.toLocaleString(), inline: true },
+          { name: '👤 Créé par', value: `<@${voteActif.creePar}>`, inline: true }
+        )
+        .setColor('#ff0000')
+        .setTimestamp()
+        .setFooter({ text: `Annulé par ${interaction.user.tag}` });
+
+      await interaction.reply({ embeds: [embed], flags: 64 });
     } else {
-      await interaction.editReply({
-        content: "❌ Impossible d'annuler la session de vote.",
+      await interaction.reply({
+        content: '❌ Erreur lors de l\'annulation du vote.',
+        flags: 64
       });
     }
-  } catch (erreur) {
-    console.error('Erreur annulation vote :', erreur);
-    await interaction.editReply({
-      content: "❌ Erreur lors de l'annulation du vote.",
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation du vote:', error);
+    await interaction.reply({
+      content: '❌ Une erreur est survenue lors de l\'annulation du vote.',
+      flags: 64
     });
   }
 }

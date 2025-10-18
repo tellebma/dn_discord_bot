@@ -5,7 +5,7 @@ echo "🚀 Starting Discord Bot..."
 # Check if AUTO_DEPLOY_COMMANDS is set to true
 if [ "$AUTO_DEPLOY_COMMANDS" = "true" ]; then
     echo "📋 Auto-deploying commands (AUTO_DEPLOY_COMMANDS=true)..."
-    node dist/deploy-commands.js
+    cd /app && node -r tsconfig-paths/register dist/deploy-commands.js
     
     if [ $? -eq 0 ]; then
         echo "✅ Commands deployed successfully"
@@ -18,4 +18,4 @@ else
 fi
 
 echo "🤖 Starting bot..."
-node dist/app.js
+cd /app && node -r tsconfig-paths/register dist/app.js
