@@ -20,7 +20,7 @@ export class GestionnaireStats {
       activitesCreees: 0,
       utilisateursActifs: 0,
       serveurs: 0,
-      ...this.stats
+      ...this.stats,
     };
   }
 

@@ -19,14 +19,12 @@ export class SteamAPI {
     return [
       { nom: 'Counter-Strike 2', joueurs: 1500000 },
       { nom: 'Dota 2', joueurs: 800000 },
-      { nom: 'Apex Legends', joueurs: 500000 }
+      { nom: 'Apex Legends', joueurs: 500000 },
     ];
   }
 
   public async rechercherJeu(nom: string): Promise<any[]> {
     // Simulation - remplacer par vraie API
-    return [
-      { nom, appid: Math.floor(Math.random() * 1000000) }
-    ];
+    return [{ nom, appid: Math.floor(Math.random() * 1000000) }];
   }
 }

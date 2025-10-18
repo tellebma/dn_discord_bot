@@ -8,10 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('editgame')
   .setDescription('Modifier un jeu du pool')
   .addStringOption(option =>
-    option
-      .setName('id')
-      .setDescription('ID du jeu à modifier')
-      .setRequired(true)
+    option.setName('id').setDescription('ID du jeu à modifier').setRequired(true)
   )
   .addStringOption(option =>
     option
@@ -26,11 +23,7 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addStringOption(option =>
-    option
-      .setName('valeur')
-      .setDescription('Nouvelle valeur')
-      .setRequired(true)
-      .setMaxLength(500)
+    option.setName('valeur').setDescription('Nouvelle valeur').setRequired(true).setMaxLength(500)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -46,7 +39,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!jeu) {
       await interaction.reply({
         content: `❌ Aucun jeu trouvé avec l'ID **${id}**.`,
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -62,7 +55,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setTitle('✅ Jeu modifié')
         .setDescription(`Le **${champ}** du jeu **${jeu.nom}** a été modifié.`)
         .addFields(
-          { name: 'Ancienne valeur', value: ancienneValeur || 'Aucune', inline: true },
+          { name: 'Ancienne valeur', value: ancienneValeur ?? 'Aucune', inline: true },
           { name: 'Nouvelle valeur', value: valeur, inline: true }
         )
         .setColor('#00ff00')
@@ -72,14 +65,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     } else {
       await interaction.reply({
         content: '❌ Erreur lors de la modification du jeu.',
-        flags: 64
+        flags: 64,
       });
     }
   } catch (error) {
     console.error('Erreur lors de la modification de jeu:', error);
     await interaction.reply({
       content: '❌ Une erreur est survenue lors de la modification du jeu.',
-      flags: 64
+      flags: 64,
     });
   }
 }

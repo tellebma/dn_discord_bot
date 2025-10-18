@@ -8,11 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('addgame')
   .setDescription('Ajouter un jeu au pool de jeux')
   .addStringOption(option =>
-    option
-      .setName('nom')
-      .setDescription('Nom du jeu')
-      .setRequired(true)
-      .setMaxLength(100)
+    option.setName('nom').setDescription('Nom du jeu').setRequired(true).setMaxLength(100)
   )
   .addStringOption(option =>
     option
@@ -29,11 +25,7 @@ export const data = new SlashCommandBuilder()
       .setMaxLength(50)
   )
   .addStringOption(option =>
-    option
-      .setName('genre')
-      .setDescription('Genre du jeu')
-      .setRequired(false)
-      .setMaxLength(50)
+    option.setName('genre').setDescription('Genre du jeu').setRequired(false).setMaxLength(50)
   )
   .addIntegerOption(option =>
     option
@@ -54,15 +46,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const nom = interaction.options.getString('nom', true);
-  const description = interaction.options.getString('description') || 'Aucune description';
-  const plateforme = interaction.options.getString('plateforme') || 'Multi-plateforme';
-  const genre = interaction.options.getString('genre') || 'Non spécifié';
-  const joueursMin = interaction.options.getInteger('joueursmin') || 1;
-  const joueursMax = interaction.options.getInteger('joueursmax') || joueursMin;
+  const description = interaction.options.getString('description') ?? 'Aucune description';
+  const plateforme = interaction.options.getString('plateforme') ?? 'Multi-plateforme';
+  const genre = interaction.options.getString('genre') ?? 'Non spécifié';
+  const joueursMin = interaction.options.getInteger('joueursmin') ?? 1;
+  const joueursMax = interaction.options.getInteger('joueursmax') ?? joueursMin;
 
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();
-    
+
     const nouveauJeu = {
       id: Date.now().toString(),
       nom,
@@ -74,7 +66,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       actif: true,
       ajouteLe: new Date(),
       ajoutePar: interaction.user.id,
-      votes: 0
+      votes: 0,
     };
 
     await gestionnaire.ajouterJeu(nouveauJeu);
@@ -95,10 +87,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     await interaction.reply({ embeds: [embed], flags: 64 });
   } catch (error) {
-    console.error('Erreur lors de l\'ajout de jeu:', error);
+    console.error("Erreur lors de l'ajout de jeu:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'ajout du jeu.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'ajout du jeu.",
+      flags: 64,
     });
   }
 }

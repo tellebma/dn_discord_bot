@@ -1,7 +1,11 @@
 import { REST, Routes } from 'discord.js';
 import { readdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { config as dotenvConfig } from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenvConfig();
 

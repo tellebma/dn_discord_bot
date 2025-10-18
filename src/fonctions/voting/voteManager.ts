@@ -34,7 +34,7 @@ export class GestionnaireVotes {
 
   public async obtenirSessionActive(): Promise<any | null> {
     const votes = await this.obtenirVotesActifs();
-    return votes.find(v => v.actif) || null;
+    return votes.find(v => v.actif) ?? null;
   }
 
   public async gererVote(voteId: string, _jeuId: string, _userId: string): Promise<boolean> {
@@ -43,6 +43,6 @@ export class GestionnaireVotes {
       // Simuler l'enregistrement du vote
       return true;
     }
-      return false;
+    return false;
   }
 }

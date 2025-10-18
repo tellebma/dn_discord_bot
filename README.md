@@ -166,10 +166,3 @@ MIT
 ## 🤝 Contribution
 
 Voir `CHANGELOG.md` pour l'historique des versions.
-
-
-
-
-
-
-

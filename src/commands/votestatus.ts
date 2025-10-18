@@ -16,7 +16,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!voteActif) {
       await interaction.reply({
         content: '❌ Aucun vote actif trouvé.',
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -41,13 +41,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     // Afficher les jeux et leurs votes
-    const jeuxAvecVotes = voteActif.jeux.map((jeu: any) => {
-      const votes = voteActif.votes.get(jeu.id)?.size || 0;
-      return {
-        nom: jeu.nom,
-        votes: votes
-      };
-    }).sort((a: any, b: any) => b.votes - a.votes);
+    const jeuxAvecVotes = voteActif.jeux
+      .map((jeu: any) => {
+        const votes = voteActif.votes.get(jeu.id)?.size || 0;
+        return {
+          nom: jeu.nom,
+          votes: votes,
+        };
+      })
+      .sort((a: any, b: any) => b.votes - a.votes);
 
     embed.addFields(
       { name: '📅 Créé le', value: voteActif.creeLe.toLocaleString(), inline: true },
@@ -57,23 +59,23 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     // Afficher les résultats
     if (jeuxAvecVotes.length > 0) {
-      const resultats = jeuxAvecVotes.map((jeu: any, index: number) => 
-        `**${index + 1}.** ${jeu.nom} - **${jeu.votes} vote(s)**`
-      ).join('\n');
-      
+      const resultats = jeuxAvecVotes
+        .map((jeu: any, index: number) => `**${index + 1}.** ${jeu.nom} - **${jeu.votes} vote(s)**`)
+        .join('\n');
+
       embed.addFields({
         name: '📊 Résultats actuels',
         value: resultats,
-        inline: false
+        inline: false,
       });
     }
 
     await interaction.reply({ embeds: [embed], flags: 64 });
   } catch (error) {
-    console.error('Erreur lors de l\'affichage du statut du vote:', error);
+    console.error("Erreur lors de l'affichage du statut du vote:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'affichage du statut du vote.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'affichage du statut du vote.",
+      flags: 64,
     });
   }
 }

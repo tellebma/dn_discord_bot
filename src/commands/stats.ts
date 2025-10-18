@@ -45,15 +45,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const activites = await gestionnaireActivites.obtenirActivites();
         const votes = await gestionnaireVotes.obtenirVotesActifs();
 
-        embed.setDescription('Statistiques générales du bot')
-          .addFields(
-            { name: '🎮 Jeux dans le pool', value: jeux.length.toString(), inline: true },
-            { name: '🎯 Activités disponibles', value: activites.length.toString(), inline: true },
-            { name: '🗳️ Votes actifs', value: votes.length.toString(), inline: true },
-            { name: '📈 Jeux votés', value: stats.jeuxVotes.toString(), inline: true },
-            { name: '📝 Activités créées', value: stats.activitesCreees.toString(), inline: true },
-            { name: '👥 Utilisateurs actifs', value: stats.utilisateursActifs.toString(), inline: true }
-          );
+        embed.setDescription('Statistiques générales du bot').addFields(
+          { name: '🎮 Jeux dans le pool', value: jeux.length.toString(), inline: true },
+          { name: '🎯 Activités disponibles', value: activites.length.toString(), inline: true },
+          { name: '🗳️ Votes actifs', value: votes.length.toString(), inline: true },
+          { name: '📈 Jeux votés', value: stats.jeuxVotes.toString(), inline: true },
+          { name: '📝 Activités créées', value: stats.activitesCreees.toString(), inline: true },
+          {
+            name: '👥 Utilisateurs actifs',
+            value: stats.utilisateursActifs.toString(),
+            inline: true,
+          }
+        );
         break;
       }
 
@@ -62,22 +65,25 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const jeuxActifs = jeux.filter(j => j.actif !== false);
         const jeuxPopulaires = jeux.sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 5);
 
-        embed.setDescription('Statistiques des jeux')
-          .addFields(
-            { name: '📊 Total des jeux', value: jeux.length.toString(), inline: true },
-            { name: '✅ Jeux actifs', value: jeuxActifs.length.toString(), inline: true },
-            { name: '❌ Jeux inactifs', value: (jeux.length - jeuxActifs.length).toString(), inline: true }
-          );
+        embed.setDescription('Statistiques des jeux').addFields(
+          { name: '📊 Total des jeux', value: jeux.length.toString(), inline: true },
+          { name: '✅ Jeux actifs', value: jeuxActifs.length.toString(), inline: true },
+          {
+            name: '❌ Jeux inactifs',
+            value: (jeux.length - jeuxActifs.length).toString(),
+            inline: true,
+          }
+        );
 
         if (jeuxPopulaires.length > 0) {
-          const topJeux = jeuxPopulaires.map((jeu, index) => 
-            `**${index + 1}.** ${jeu.nom} - ${jeu.votes || 0} vote(s)`
-          ).join('\n');
-          
+          const topJeux = jeuxPopulaires
+            .map((jeu, index) => `**${index + 1}.** ${jeu.nom} - ${jeu.votes || 0} vote(s)`)
+            .join('\n');
+
           embed.addFields({
             name: '🏆 Top 5 des jeux populaires',
             value: topJeux,
-            inline: false
+            inline: false,
           });
         }
         break;
@@ -87,12 +93,19 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const activites = await gestionnaireActivites.obtenirActivites();
         const activitesActives = activites.filter(a => a.actif !== false);
 
-        embed.setDescription('Statistiques des activités')
-          .addFields(
-            { name: '📊 Total des activités', value: activites.length.toString(), inline: true },
-            { name: '✅ Activités actives', value: activitesActives.length.toString(), inline: true },
-            { name: '❌ Activités inactives', value: (activites.length - activitesActives.length).toString(), inline: true }
-          );
+        embed.setDescription('Statistiques des activités').addFields(
+          { name: '📊 Total des activités', value: activites.length.toString(), inline: true },
+          {
+            name: '✅ Activités actives',
+            value: activitesActives.length.toString(),
+            inline: true,
+          },
+          {
+            name: '❌ Activités inactives',
+            value: (activites.length - activitesActives.length).toString(),
+            inline: true,
+          }
+        );
 
         if (activites.length > 0) {
           const categories = activites.reduce((acc: any, activite) => {
@@ -108,7 +121,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           embed.addFields({
             name: '🏷️ Par catégorie',
             value: categoriesListe,
-            inline: false
+            inline: false,
           });
         }
         break;
@@ -118,18 +131,22 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         const votes = await gestionnaireVotes.obtenirVotesActifs();
         const voteActif = await gestionnaireVotes.obtenirSessionActive();
 
-        embed.setDescription('Statistiques des votes')
+        embed
+          .setDescription('Statistiques des votes')
           .addFields(
             { name: '📊 Votes créés', value: votes.length.toString(), inline: true },
             { name: '✅ Vote actif', value: voteActif ? 'Oui' : 'Non', inline: true }
           );
 
         if (voteActif) {
-          const totalVotes = Array.from(voteActif.votes.values()).reduce((acc: number, votes: any) => acc + (votes.size || 0), 0);
+          const totalVotes = Array.from(voteActif.votes.values()).reduce(
+            (acc: number, votes: any) => acc + (votes.size || 0),
+            0
+          );
           embed.addFields({
             name: '🗳️ Vote en cours',
             value: `**ID:** ${voteActif.id}\n**Durée:** ${voteActif.duree}h\n**Total votes:** ${totalVotes}`,
-            inline: false
+            inline: false,
           });
         }
         break;
@@ -138,17 +155,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       default:
         await interaction.reply({
           content: '❌ Type de statistiques inconnu.',
-          flags: 64
+          flags: 64,
         });
         return;
     }
 
     await interaction.reply({ embeds: [embed], flags: 64 });
   } catch (error) {
-    console.error('Erreur lors de l\'affichage des statistiques:', error);
+    console.error("Erreur lors de l'affichage des statistiques:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'affichage des statistiques.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'affichage des statistiques.",
+      flags: 64,
     });
   }
 }

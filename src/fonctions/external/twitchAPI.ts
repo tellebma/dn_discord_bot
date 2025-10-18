@@ -19,7 +19,7 @@ export class TwitchAPI {
     return [
       { nom: 'Just Chatting', spectateurs: 500000 },
       { nom: 'League of Legends', spectateurs: 300000 },
-      { nom: 'Fortnite', spectateurs: 200000 }
+      { nom: 'Fortnite', spectateurs: 200000 },
     ];
   }
 }
