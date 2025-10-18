@@ -37,4 +37,3 @@ export interface RappelVote {
   rappelsEnvoyes: number;
 }
 
-

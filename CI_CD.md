@@ -96,3 +96,4 @@ Aucun secret nécessaire pour la publication GHCR (utilise `GITHUB_TOKEN` automa
 
 
 
+

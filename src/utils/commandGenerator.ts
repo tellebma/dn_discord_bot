@@ -36,4 +36,3 @@ export function genererCommande(nom: string, description: string, options: any[]
 
   return commande;
 }
-

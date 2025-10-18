@@ -16,4 +16,3 @@ export function creerCommandeStandard(nom: string, description: string, options:
     }
   };
 }
-
