@@ -36,4 +36,3 @@ export interface RappelVote {
   prochainRappel: Date;
   rappelsEnvoyes: number;
 }
-

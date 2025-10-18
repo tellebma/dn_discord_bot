@@ -6,13 +6,13 @@ export function creerCommandeStandard(nom: string, description: string, options:
     data: {
       name: nom,
       description: description,
-      options: options
+      options: options,
     },
     execute: async (interaction: any) => {
       await interaction.reply({
         content: `Commande ${nom} exécutée !`,
-        flags: 64
+        flags: 64,
       });
-    }
+    },
   };
 }

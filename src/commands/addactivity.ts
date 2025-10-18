@@ -8,23 +8,19 @@ export const data = new SlashCommandBuilder()
   .setName('addactivity')
   .setDescription('Ajouter une nouvelle activité extra')
   .addStringOption(option =>
-    option
-      .setName('nom')
-      .setDescription('Nom de l\'activité')
-      .setRequired(true)
-      .setMaxLength(100)
+    option.setName('nom').setDescription("Nom de l'activité").setRequired(true).setMaxLength(100)
   )
   .addStringOption(option =>
     option
       .setName('description')
-      .setDescription('Description de l\'activité')
+      .setDescription("Description de l'activité")
       .setRequired(true)
       .setMaxLength(500)
   )
   .addStringOption(option =>
     option
       .setName('categorie')
-      .setDescription('Catégorie de l\'activité')
+      .setDescription("Catégorie de l'activité")
       .setRequired(false)
       .setMaxLength(50)
   );
@@ -36,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     const gestionnaire = GestionnaireActivitesExtras.getInstance();
-    
+
     const nouvelleActivite = {
       id: Date.now().toString(),
       nom,
@@ -44,7 +40,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       categorie,
       actif: true,
       creeeLe: new Date(),
-      creeePar: interaction.user.id
+      creeePar: interaction.user.id,
     };
 
     await gestionnaire.ajouterActivite(nouvelleActivite);
@@ -63,11 +59,10 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     await interaction.reply({ embeds: [embed], flags: 64 });
   } catch (error) {
-    console.error('Erreur lors de l\'ajout d\'activité:', error);
+    console.error("Erreur lors de l'ajout d'activité:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'ajout de l\'activité.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'ajout de l'activité.",
+      flags: 64,
     });
   }
 }
-

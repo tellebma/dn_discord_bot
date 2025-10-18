@@ -23,16 +23,10 @@ export const data = new SlashCommandBuilder()
       .setName('add')
       .setDescription('Ajouter une nouvelle activité')
       .addStringOption(option =>
-        option
-          .setName('nom')
-          .setDescription('Nom de l\'activité')
-          .setRequired(true)
+        option.setName('nom').setDescription("Nom de l'activité").setRequired(true)
       )
       .addStringOption(option =>
-        option
-          .setName('description')
-          .setDescription('Description de l\'activité')
-          .setRequired(true)
+        option.setName('description').setDescription("Description de l'activité").setRequired(true)
       )
   )
   .addSubcommand(subcommand =>
@@ -40,10 +34,7 @@ export const data = new SlashCommandBuilder()
       .setName('remove')
       .setDescription('Supprimer une activité')
       .addStringOption(option =>
-        option
-          .setName('id')
-          .setDescription('ID de l\'activité à supprimer')
-          .setRequired(true)
+        option.setName('id').setDescription("ID de l'activité à supprimer").setRequired(true)
       )
   );
 
@@ -65,9 +56,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         if (activites.length === 0) {
           embed.setDescription('Aucune activité trouvée.');
         } else {
-          const liste = activites.map((activite, index) => 
-            `**${index + 1}.** ${activite.nom} - ${activite.description ?? 'Aucune description'}`
-          ).join('\n');
+          const liste = activites
+            .map(
+              (activite, index) =>
+                `**${index + 1}.** ${activite.nom} - ${activite.description ?? 'Aucune description'}`
+            )
+            .join('\n');
           embed.setDescription(liste);
         }
 
@@ -84,7 +78,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           nom,
           description,
           actif: true,
-          creeeLe: new Date()
+          creeeLe: new Date(),
         };
 
         await gestionnaire.ajouterActivite(nouvelleActivite);
@@ -114,7 +108,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         } else {
           await interaction.reply({
             content: `❌ Aucune activité trouvée avec l'ID **${id}**.`,
-            flags: 64
+            flags: 64,
           });
         }
         break;
@@ -123,14 +117,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       default:
         await interaction.reply({
           content: '❌ Sous-commande inconnue.',
-          flags: 64
+          flags: 64,
         });
     }
   } catch (error) {
     console.error('Erreur dans la commande activities:', error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'exécution de la commande.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'exécution de la commande.",
+      flags: 64,
     });
   }
 }

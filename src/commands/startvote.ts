@@ -1,4 +1,11 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from 'discord.js';
 import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 
@@ -37,8 +44,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const voteActif = await gestionnaireVotes.obtenirSessionActive();
     if (voteActif) {
       await interaction.reply({
-        content: '❌ Un vote est déjà en cours. Veuillez d\'abord l\'annuler.',
-        flags: 64
+        content: "❌ Un vote est déjà en cours. Veuillez d'abord l'annuler.",
+        flags: 64,
       });
       return;
     }
@@ -48,8 +55,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     if (jeux.length < 3) {
       await interaction.reply({
-        content: '❌ Pas assez de jeux dans le pool. Ajoutez au moins 3 jeux avant de démarrer un vote.',
-        flags: 64
+        content:
+          '❌ Pas assez de jeux dans le pool. Ajoutez au moins 3 jeux avant de démarrer un vote.',
+        flags: 64,
       });
       return;
     }
@@ -62,7 +70,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       actif: true,
       creeLe: new Date(),
       creePar: interaction.user.id,
-      votes: new Map()
+      votes: new Map(),
     };
 
     await gestionnaireVotes.creerVote(vote);
@@ -80,7 +88,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embed.addFields({
         name: `${index + 1}. ${jeu.nom}`,
         value: `${jeu.description ?? 'Aucune description'}\n🖥️ ${jeu.plateforme ?? 'Non spécifié'} | 🎯 ${jeu.genre ?? 'Non spécifié'}`,
-        inline: false
+        inline: false,
       });
     });
 
@@ -98,46 +106,47 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     await interaction.reply({ embeds: [embed], components: [row] });
 
     // Programmer la fin du vote
-    setTimeout(async () => {
-      const voteFinal = await gestionnaireVotes.obtenirVote(vote.id);
-      if (voteFinal && voteFinal.actif) {
-        // Terminer le vote
-        voteFinal.actif = false;
-        await gestionnaireVotes.creerVote(voteFinal);
+    setTimeout(
+      async () => {
+        const voteFinal = await gestionnaireVotes.obtenirVote(vote.id);
+        if (voteFinal && voteFinal.actif) {
+          // Terminer le vote
+          voteFinal.actif = false;
+          await gestionnaireVotes.creerVote(voteFinal);
 
-        // Afficher les résultats
-        const embedResultats = new EmbedBuilder()
-          .setTitle('🏆 Résultats du vote')
-          .setDescription('Le vote est terminé ! Voici les résultats :')
-          .setColor('#ffd700')
-          .setTimestamp();
+          // Afficher les résultats
+          const embedResultats = new EmbedBuilder()
+            .setTitle('🏆 Résultats du vote')
+            .setDescription('Le vote est terminé ! Voici les résultats :')
+            .setColor('#ffd700')
+            .setTimestamp();
 
-        // Trier les jeux par nombre de votes
-        const jeuxTries = jeux.sort((a, b) => {
-          const votesA = voteFinal.votes.get(a.id)?.size ?? 0;
-          const votesB = voteFinal.votes.get(b.id)?.size ?? 0;
-          return votesB - votesA;
-        });
-
-        jeuxTries.forEach((jeu, index) => {
-          const votes = voteFinal.votes.get(jeu.id)?.size ?? 0;
-          embedResultats.addFields({
-            name: `${index + 1}. ${jeu.nom}`,
-            value: `**${votes} vote(s)**`,
-            inline: true
+          // Trier les jeux par nombre de votes
+          const jeuxTries = jeux.sort((a, b) => {
+            const votesA = voteFinal.votes.get(a.id)?.size ?? 0;
+            const votesB = voteFinal.votes.get(b.id)?.size ?? 0;
+            return votesB - votesA;
           });
-        });
 
-        await interaction.followUp({ embeds: [embedResultats] });
-      }
-    }, duree * 60 * 60 * 1000); // Convertir en millisecondes
+          jeuxTries.forEach((jeu, index) => {
+            const votes = voteFinal.votes.get(jeu.id)?.size ?? 0;
+            embedResultats.addFields({
+              name: `${index + 1}. ${jeu.nom}`,
+              value: `**${votes} vote(s)**`,
+              inline: true,
+            });
+          });
 
+          await interaction.followUp({ embeds: [embedResultats] });
+        }
+      },
+      duree * 60 * 60 * 1000
+    ); // Convertir en millisecondes
   } catch (error) {
     console.error('Erreur lors du démarrage du vote:', error);
     await interaction.reply({
       content: '❌ Une erreur est survenue lors du démarrage du vote.',
-      flags: 64
+      flags: 64,
     });
   }
 }
-

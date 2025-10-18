@@ -8,10 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('cancelvote')
   .setDescription('Annuler le vote en cours')
   .addBooleanOption(option =>
-    option
-      .setName('confirmer')
-      .setDescription('Confirmer l\'annulation')
-      .setRequired(true)
+    option.setName('confirmer').setDescription("Confirmer l'annulation").setRequired(true)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -19,8 +16,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   if (!confirmer) {
     await interaction.reply({
-      content: '❌ Annulation du vote annulée. Veuillez confirmer l\'annulation.',
-      flags: 64
+      content: "❌ Annulation du vote annulée. Veuillez confirmer l'annulation.",
+      flags: 64,
     });
     return;
   }
@@ -32,7 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!voteActif) {
       await interaction.reply({
         content: '❌ Aucun vote actif trouvé.',
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -55,15 +52,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       await interaction.reply({ embeds: [embed], flags: 64 });
     } else {
       await interaction.reply({
-        content: '❌ Erreur lors de l\'annulation du vote.',
-        flags: 64
+        content: "❌ Erreur lors de l'annulation du vote.",
+        flags: 64,
       });
     }
   } catch (error) {
-    console.error('Erreur lors de l\'annulation du vote:', error);
+    console.error("Erreur lors de l'annulation du vote:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'annulation du vote.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'annulation du vote.",
+      flags: 64,
     });
   }
 }

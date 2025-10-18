@@ -43,6 +43,6 @@ export class GestionnaireVotes {
       // Simuler l'enregistrement du vote
       return true;
     }
-      return false;
+    return false;
   }
 }

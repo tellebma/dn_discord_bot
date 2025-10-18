@@ -8,10 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('gamepool')
   .setDescription('Afficher le pool de jeux')
   .addBooleanOption(option =>
-    option
-      .setName('actifs')
-      .setDescription('Afficher seulement les jeux actifs')
-      .setRequired(false)
+    option.setName('actifs').setDescription('Afficher seulement les jeux actifs').setRequired(false)
   )
   .addIntegerOption(option =>
     option
@@ -40,32 +37,35 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Limiter le nombre de résultats
     jeux = jeux.slice(0, limite);
 
-    const embed = new EmbedBuilder()
-      .setTitle('🎮 Pool de jeux')
-      .setColor('#0099ff')
-      .setTimestamp();
+    const embed = new EmbedBuilder().setTitle('🎮 Pool de jeux').setColor('#0099ff').setTimestamp();
 
     if (jeux.length === 0) {
       embed.setDescription('Aucun jeu trouvé dans le pool.');
     } else {
-      const liste = jeux.map((jeu, index) => {
-        const votes = jeu.votes ?? 0;
-        const statut = jeu.actif !== false ? '✅' : '❌';
-        return `**${index + 1}.** ${statut} **${jeu.nom}** (${votes} votes)\n` +
-               `   📝 ${jeu.description ?? 'Aucune description'}\n` +
-               `   🖥️ ${jeu.plateforme ?? 'Non spécifié'} | 🎯 ${jeu.genre ?? 'Non spécifié'}`;
-      }).join('\n\n');
+      const liste = jeux
+        .map((jeu, index) => {
+          const votes = jeu.votes ?? 0;
+          const statut = jeu.actif !== false ? '✅' : '❌';
+          return (
+            `**${index + 1}.** ${statut} **${jeu.nom}** (${votes} votes)\n` +
+            `   📝 ${jeu.description ?? 'Aucune description'}\n` +
+            `   🖥️ ${jeu.plateforme ?? 'Non spécifié'} | 🎯 ${jeu.genre ?? 'Non spécifié'}`
+          );
+        })
+        .join('\n\n');
 
       embed.setDescription(liste);
-      embed.setFooter({ text: `Affichage de ${jeux.length} jeu(x)${actifsUniquement ? ' actif(s)' : ''}` });
+      embed.setFooter({
+        text: `Affichage de ${jeux.length} jeu(x)${actifsUniquement ? ' actif(s)' : ''}`,
+      });
     }
 
     await interaction.reply({ embeds: [embed], flags: 64 });
   } catch (error) {
-    console.error('Erreur lors de l\'affichage du pool de jeux:', error);
+    console.error("Erreur lors de l'affichage du pool de jeux:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de l\'affichage du pool de jeux.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de l'affichage du pool de jeux.",
+      flags: 64,
     });
   }
 }

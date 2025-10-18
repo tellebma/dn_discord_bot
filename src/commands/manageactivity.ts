@@ -8,10 +8,7 @@ export const data = new SlashCommandBuilder()
   .setName('manageactivity')
   .setDescription('Gérer une activité existante')
   .addStringOption(option =>
-    option
-      .setName('id')
-      .setDescription('ID de l\'activité à modifier')
-      .setRequired(true)
+    option.setName('id').setDescription("ID de l'activité à modifier").setRequired(true)
   )
   .addStringOption(option =>
     option
@@ -46,7 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!activite) {
       await interaction.reply({
         content: `❌ Aucune activité trouvée avec l'ID **${id}**.`,
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -67,7 +64,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         if (!valeur) {
           await interaction.reply({
             content: '❌ Veuillez fournir une nouvelle valeur pour le nom.',
-            flags: 64
+            flags: 64,
           });
           return;
         }
@@ -78,7 +75,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         if (!valeur) {
           await interaction.reply({
             content: '❌ Veuillez fournir une nouvelle valeur pour la description.',
-            flags: 64
+            flags: 64,
           });
           return;
         }
@@ -88,7 +85,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       default:
         await interaction.reply({
           content: '❌ Action inconnue.',
-          flags: 64
+          flags: 64,
         });
         return;
     }
@@ -105,16 +102,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       await interaction.reply({ embeds: [embed], flags: 64 });
     } else {
       await interaction.reply({
-        content: '❌ Erreur lors de la modification de l\'activité.',
-        flags: 64
+        content: "❌ Erreur lors de la modification de l'activité.",
+        flags: 64,
       });
     }
   } catch (error) {
-    console.error('Erreur lors de la gestion d\'activité:', error);
+    console.error("Erreur lors de la gestion d'activité:", error);
     await interaction.reply({
-      content: '❌ Une erreur est survenue lors de la modification de l\'activité.',
-      flags: 64
+      content: "❌ Une erreur est survenue lors de la modification de l'activité.",
+      flags: 64,
     });
   }
 }
-

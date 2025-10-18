@@ -20,10 +20,7 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addStringOption(option =>
-    option
-      .setName('canal')
-      .setDescription('ID du canal ou mention du canal')
-      .setRequired(true)
+    option.setName('canal').setDescription('ID du canal ou mention du canal').setRequired(true)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -32,7 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     const stockage = StockageCanal.getInstance();
-    
+
     // Extraire l'ID du canal depuis la mention ou utiliser directement l'ID
     let canalId = canalInput;
     if (canalInput.startsWith('<#') && canalInput.endsWith('>')) {
@@ -43,8 +40,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const canal = interaction.guild?.channels.cache.get(canalId);
     if (!canal) {
       await interaction.reply({
-        content: '❌ Canal introuvable. Vérifiez l\'ID ou la mention du canal.',
-        flags: 64
+        content: "❌ Canal introuvable. Vérifiez l'ID ou la mention du canal.",
+        flags: 64,
       });
       return;
     }
@@ -53,7 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!canal.isTextBased()) {
       await interaction.reply({
         content: '❌ Le canal doit être un canal textuel.',
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -62,15 +59,16 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!botMember) {
       await interaction.reply({
         content: '❌ Impossible de récupérer les informations du bot.',
-        flags: 64
+        flags: 64,
       });
       return;
     }
     const permissions = canal.permissionsFor(botMember);
     if (!permissions?.has(['SendMessages', 'EmbedLinks'])) {
       await interaction.reply({
-        content: '❌ Je n\'ai pas les permissions nécessaires dans ce canal (SendMessages, EmbedLinks).',
-        flags: 64
+        content:
+          "❌ Je n'ai pas les permissions nécessaires dans ce canal (SendMessages, EmbedLinks).",
+        flags: 64,
       });
       return;
     }
@@ -79,18 +77,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const guildId = interaction.guildId;
     if (!guildId) {
       await interaction.reply({
-        content: '❌ Impossible de récupérer l\'ID du serveur.',
-        flags: 64
+        content: "❌ Impossible de récupérer l'ID du serveur.",
+        flags: 64,
       });
       return;
     }
     await stockage.definirCanal(guildId, type, canalId);
 
     const typeLabels: { [key: string]: string } = {
-      'votes': '🗳️ Votes',
-      'weekly': '📅 Plans hebdomadaires',
-      'announcements': '📢 Annonces',
-      'logs': '📝 Logs'
+      votes: '🗳️ Votes',
+      weekly: '📅 Plans hebdomadaires',
+      announcements: '📢 Annonces',
+      logs: '📝 Logs',
     };
 
     const embed = new EmbedBuilder()
@@ -110,7 +108,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     console.error('Erreur lors de la configuration du canal:', error);
     await interaction.reply({
       content: '❌ Une erreur est survenue lors de la configuration du canal.',
-      flags: 64
+      flags: 64,
     });
   }
 }

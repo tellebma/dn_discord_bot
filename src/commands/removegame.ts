@@ -8,16 +8,10 @@ export const data = new SlashCommandBuilder()
   .setName('removegame')
   .setDescription('Supprimer un jeu du pool')
   .addStringOption(option =>
-    option
-      .setName('id')
-      .setDescription('ID du jeu à supprimer')
-      .setRequired(true)
+    option.setName('id').setDescription('ID du jeu à supprimer').setRequired(true)
   )
   .addBooleanOption(option =>
-    option
-      .setName('confirmer')
-      .setDescription('Confirmer la suppression')
-      .setRequired(true)
+    option.setName('confirmer').setDescription('Confirmer la suppression').setRequired(true)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -27,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   if (!confirmer) {
     await interaction.reply({
       content: '❌ Suppression annulée. Veuillez confirmer la suppression.',
-      flags: 64
+      flags: 64,
     });
     return;
   }
@@ -40,7 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     if (!jeu) {
       await interaction.reply({
         content: `❌ Aucun jeu trouvé avec l'ID **${id}**.`,
-        flags: 64
+        flags: 64,
       });
       return;
     }
@@ -63,14 +57,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     } else {
       await interaction.reply({
         content: '❌ Erreur lors de la suppression du jeu.',
-        flags: 64
+        flags: 64,
       });
     }
   } catch (error) {
     console.error('Erreur lors de la suppression de jeu:', error);
     await interaction.reply({
       content: '❌ Une erreur est survenue lors de la suppression du jeu.',
-      flags: 64
+      flags: 64,
     });
   }
 }

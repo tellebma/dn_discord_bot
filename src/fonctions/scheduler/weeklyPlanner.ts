@@ -18,7 +18,7 @@ export class PlanificateurHebdomadaire {
       jeux: [],
       activites: [],
       date: new Date(),
-      periode: 'Cette semaine'
+      periode: 'Cette semaine',
     };
   }
 

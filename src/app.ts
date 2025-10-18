@@ -144,17 +144,17 @@ client.on('interactionCreate', async (interaction: any) => {
   // Gestion des boutons (pour les votes)
   if (interaction.isButton()) {
     const customId = interaction.customId;
-    
+
     if (customId.startsWith('vote_')) {
       const [, voteId, jeuId] = customId.split('_');
-      
+
       try {
         const gestionnaireVotes = GestionnaireVotes.getInstance();
         const success = await gestionnaireVotes.gererVote(voteId, jeuId, interaction.user.id);
-        
+
         if (success) {
           await interaction.reply({
-            content: "✅ Votre vote a été enregistré !",
+            content: '✅ Votre vote a été enregistré !',
             flags: 64,
           });
         } else {
@@ -172,7 +172,7 @@ client.on('interactionCreate', async (interaction: any) => {
       }
     } else {
       await interaction.reply({
-        content: "❌ Interaction de bouton non reconnue.",
+        content: '❌ Interaction de bouton non reconnue.',
         flags: 64,
       });
     }
