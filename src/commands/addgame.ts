@@ -54,11 +54,11 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const nom = interaction.options.getString('nom', true);
-  const description = interaction.options.getString('description') || 'Aucune description';
-  const plateforme = interaction.options.getString('plateforme') || 'Multi-plateforme';
-  const genre = interaction.options.getString('genre') || 'Non spécifié';
-  const joueursMin = interaction.options.getInteger('joueursmin') || 1;
-  const joueursMax = interaction.options.getInteger('joueursmax') || joueursMin;
+  const description = interaction.options.getString('description') ?? 'Aucune description';
+  const plateforme = interaction.options.getString('plateforme') ?? 'Multi-plateforme';
+  const genre = interaction.options.getString('genre') ?? 'Non spécifié';
+  const joueursMin = interaction.options.getInteger('joueursmin') ?? 1;
+  const joueursMax = interaction.options.getInteger('joueursmax') ?? joueursMin;
 
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();

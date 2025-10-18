@@ -66,7 +66,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           embed.setDescription('Aucune activité trouvée.');
         } else {
           const liste = activites.map((activite, index) => 
-            `**${index + 1}.** ${activite.nom} - ${activite.description || 'Aucune description'}`
+            `**${index + 1}.** ${activite.nom} - ${activite.description ?? 'Aucune description'}`
           ).join('\n');
           embed.setDescription(liste);
         }

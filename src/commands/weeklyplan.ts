@@ -46,7 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Afficher les jeux
     if (plan.jeux && plan.jeux.length > 0) {
       const jeuxListe = plan.jeux.map((jeu: any, index: number) => 
-        `**${index + 1}.** ${jeu.nom} - ${jeu.description || 'Aucune description'}`
+        `**${index + 1}.** ${jeu.nom} - ${jeu.description ?? 'Aucune description'}`
       ).join('\n');
       
       embed.addFields({
@@ -59,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     // Afficher les activités
     if (plan.activites && plan.activites.length > 0) {
       const activitesListe = plan.activites.map((activite: any, index: number) => 
-        `**${index + 1}.** ${activite.nom} - ${activite.description || 'Aucune description'}`
+        `**${index + 1}.** ${activite.nom} - ${activite.description ?? 'Aucune description'}`
       ).join('\n');
       
       embed.addFields({

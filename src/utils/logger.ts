@@ -6,7 +6,7 @@ export class Logger {
   private niveau: string;
 
   private constructor() {
-    this.niveau = process.env.LOG_LEVEL || 'info';
+    this.niveau = process.env.LOG_LEVEL ?? 'info';
   }
 
   public static getInstance(): Logger {

@@ -20,10 +20,10 @@ export const config = {
     }
   },
   votes: {
-    defaultGamesCount: parseInt(process.env.DEFAULT_VOTE_GAMES_COUNT || '10'),
-    defaultDuration: parseInt(process.env.DEFAULT_VOTE_DURATION || '24')
+    defaultGamesCount: parseInt(process.env.DEFAULT_VOTE_GAMES_COUNT ?? '10'),
+    defaultDuration: parseInt(process.env.DEFAULT_VOTE_DURATION ?? '24')
   },
   logs: {
-    level: process.env.LOG_LEVEL || 'info'
+    level: process.env.LOG_LEVEL ?? 'info'
   }
 };

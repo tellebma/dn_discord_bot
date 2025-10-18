@@ -49,11 +49,11 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       embed.setDescription('Aucun jeu trouvé dans le pool.');
     } else {
       const liste = jeux.map((jeu, index) => {
-        const votes = jeu.votes || 0;
+        const votes = jeu.votes ?? 0;
         const statut = jeu.actif !== false ? '✅' : '❌';
         return `**${index + 1}.** ${statut} **${jeu.nom}** (${votes} votes)\n` +
-               `   📝 ${jeu.description || 'Aucune description'}\n` +
-               `   🖥️ ${jeu.plateforme || 'Non spécifié'} | 🎯 ${jeu.genre || 'Non spécifié'}`;
+               `   📝 ${jeu.description ?? 'Aucune description'}\n` +
+               `   🖥️ ${jeu.plateforme ?? 'Non spécifié'} | 🎯 ${jeu.genre ?? 'Non spécifié'}`;
       }).join('\n\n');
 
       embed.setDescription(liste);

@@ -36,7 +36,7 @@ async function chargerCommandes(): Promise<void> {
       try {
         // Import dynamique pour la compatibilité des modules ES
         const moduleCommande = await import(cheminFichier);
-        const commande = moduleCommande.default || moduleCommande;
+        const commande = moduleCommande.default ?? moduleCommande;
 
         if ('data' in commande && 'execute' in commande) {
           client.commands.set(commande.data.name, commande as CommandeBot);
@@ -77,7 +77,7 @@ async function chargerEvenements(): Promise<void> {
 
       try {
         const moduleEvenement = await import(cheminFichier);
-        const evenement = moduleEvenement.default || moduleEvenement;
+        const evenement = moduleEvenement.default ?? moduleEvenement;
 
         if (evenement.once) {
           client.once(evenement.name, (...args: any[]) => evenement.execute(...args));

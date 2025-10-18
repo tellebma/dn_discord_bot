@@ -51,7 +51,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    let modifications: any = {};
+    const modifications: any = {};
     let message = '';
 
     switch (action) {

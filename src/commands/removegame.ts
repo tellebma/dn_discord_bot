@@ -53,7 +53,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setDescription(`Le jeu **${jeu.nom}** a été supprimé du pool.`)
         .addFields(
           { name: '🆔 ID', value: id, inline: true },
-          { name: '📝 Description', value: jeu.description || 'Aucune description', inline: false }
+          { name: '📝 Description', value: jeu.description ?? 'Aucune description', inline: false }
         )
         .setColor('#ff0000')
         .setTimestamp()

@@ -32,7 +32,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const nom = interaction.options.getString('nom', true);
   const description = interaction.options.getString('description', true);
-  const categorie = interaction.options.getString('categorie') || 'Général';
+  const categorie = interaction.options.getString('categorie') ?? 'Général';
 
   try {
     const gestionnaire = GestionnaireActivitesExtras.getInstance();

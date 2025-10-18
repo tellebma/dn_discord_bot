@@ -62,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setTitle('✅ Jeu modifié')
         .setDescription(`Le **${champ}** du jeu **${jeu.nom}** a été modifié.`)
         .addFields(
-          { name: 'Ancienne valeur', value: ancienneValeur || 'Aucune', inline: true },
+          { name: 'Ancienne valeur', value: ancienneValeur ?? 'Aucune', inline: true },
           { name: 'Nouvelle valeur', value: valeur, inline: true }
         )
         .setColor('#00ff00')

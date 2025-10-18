@@ -58,7 +58,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const permissions = canal.permissionsFor(interaction.guild?.members.me!);
+    const botMember = interaction.guild?.members.me;
+    if (!botMember) {
+      await interaction.reply({
+        content: '❌ Impossible de récupérer les informations du bot.',
+        flags: 64
+      });
+      return;
+    }
+    const permissions = canal.permissionsFor(botMember);
     if (!permissions?.has(['SendMessages', 'EmbedLinks'])) {
       await interaction.reply({
         content: '❌ Je n\'ai pas les permissions nécessaires dans ce canal (SendMessages, EmbedLinks).',
@@ -68,7 +76,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     // Enregistrer le canal
-    await stockage.definirCanal(interaction.guildId!, type, canalId);
+    const guildId = interaction.guildId;
+    if (!guildId) {
+      await interaction.reply({
+        content: '❌ Impossible de récupérer l\'ID du serveur.',
+        flags: 64
+      });
+      return;
+    }
+    await stockage.definirCanal(guildId, type, canalId);
 
     const typeLabels: { [key: string]: string } = {
       'votes': '🗳️ Votes',
@@ -79,9 +95,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     const embed = new EmbedBuilder()
       .setTitle('✅ Canal configuré')
-      .setDescription(`Le canal ${canal} a été configuré pour ${typeLabels[type] || type}.`)
+      .setDescription(`Le canal ${canal} a été configuré pour ${typeLabels[type] ?? type}.`)
       .addFields(
-        { name: '🏷️ Type', value: typeLabels[type] || type, inline: true },
+        { name: '🏷️ Type', value: typeLabels[type] ?? type, inline: true },
         { name: '📍 Canal', value: `${canal}`, inline: true },
         { name: '🆔 ID', value: canalId, inline: true }
       )

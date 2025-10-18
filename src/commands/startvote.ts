@@ -79,7 +79,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     jeux.forEach((jeu, index) => {
       embed.addFields({
         name: `${index + 1}. ${jeu.nom}`,
-        value: `${jeu.description || 'Aucune description'}\n🖥️ ${jeu.plateforme || 'Non spécifié'} | 🎯 ${jeu.genre || 'Non spécifié'}`,
+        value: `${jeu.description ?? 'Aucune description'}\n🖥️ ${jeu.plateforme ?? 'Non spécifié'} | 🎯 ${jeu.genre ?? 'Non spécifié'}`,
         inline: false
       });
     });
@@ -114,13 +114,13 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         // Trier les jeux par nombre de votes
         const jeuxTries = jeux.sort((a, b) => {
-          const votesA = voteFinal.votes.get(a.id)?.size || 0;
-          const votesB = voteFinal.votes.get(b.id)?.size || 0;
+          const votesA = voteFinal.votes.get(a.id)?.size ?? 0;
+          const votesB = voteFinal.votes.get(b.id)?.size ?? 0;
           return votesB - votesA;
         });
 
         jeuxTries.forEach((jeu, index) => {
-          const votes = voteFinal.votes.get(jeu.id)?.size || 0;
+          const votes = voteFinal.votes.get(jeu.id)?.size ?? 0;
           embedResultats.addFields({
             name: `${index + 1}. ${jeu.nom}`,
             value: `**${votes} vote(s)**`,
