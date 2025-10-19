@@ -36,6 +36,10 @@ COPY scripts/start.sh ./scripts/start.sh
 # Make script executable
 RUN chmod +x ./scripts/start.sh
 
+# Create env directory and copy environment files
+RUN mkdir -p /app/env
+COPY .env* /app/env/
+
 # Create non-root user and set permissions
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S botuser -u 1001 && \

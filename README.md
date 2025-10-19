@@ -28,9 +28,10 @@ cd divnum_discord_bot
 # Installer les dépendances
 npm install
 
-# Créer le fichier .env
-cp .env.example .env
-# Éditer .env avec vos tokens
+# Configuration des variables d'environnement
+# Copier le template et éditer avec vos tokens
+cp env/.env.template env/.env
+# Éditer env/.env avec vos tokens
 
 # Build
 npm run build
@@ -46,17 +47,39 @@ npm start
 docker build -t discord-bot .
 
 # Run
-docker run -d --env-file .env -v $(pwd)/data:/app/data discord-bot
+docker run -d --env-file env/.env -v $(pwd)/data:/app/data discord-bot
 ```
 
 ## ⚙️ Configuration
 
-### Fichier `.env`
+### Variables d'environnement
+
+Les variables d'environnement sont organisées dans le dossier `env/` :
+
+```bash
+env/
+├── .env.template    # Template avec toutes les variables
+├── .env            # Votre configuration (à créer)
+└── README.md       # Documentation détaillée
+```
+
+#### Configuration rapide
+
+```bash
+# Copier le template
+cp env/.env.template env/.env
+
+# Éditer avec vos valeurs
+nano env/.env
+```
+
+#### Variables requises
 
 ```env
 # Discord (OBLIGATOIRE)
 DISCORD_TOKEN=votre_token
 DISCORD_CLIENT_ID=votre_client_id
+DISCORD_GUILD_ID=votre_guild_id
 
 # APIs Externes (OPTIONNEL - pour /stats trending)
 STEAM_API_KEY=votre_cle_steam
@@ -67,6 +90,12 @@ RAWG_API_KEY=votre_cle_rawg
 # Votes
 DEFAULT_VOTE_GAMES_COUNT=10
 DEFAULT_VOTE_DURATION=24
+
+# Logs
+LOG_LEVEL=info
+
+# Auto-déploiement des commandes
+AUTO_DEPLOY_COMMANDS=false
 ```
 
 ### Obtenir les API Keys (optionnel)
@@ -166,3 +195,4 @@ MIT
 ## 🤝 Contribution
 
 Voir `CHANGELOG.md` pour l'historique des versions.
+

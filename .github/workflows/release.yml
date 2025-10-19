@@ -120,4 +120,3 @@ jobs:
           echo "**Images Docker publiées :**" >> $GITHUB_STEP_SUMMARY
           echo "- ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- ghcr.io/${{ github.repository_owner }}/divnum-discord-bot:latest" >> $GITHUB_STEP_SUMMARY
-
