@@ -90,10 +90,3 @@ Aucun secret nécessaire pour la publication GHCR (utilise `GITHUB_TOKEN` automa
 [![CI](https://github.com/tellebma/divnum-discord-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/tellebma/divnum-discord-bot/actions/workflows/ci.yml)
 [![Docker](https://github.com/tellebma/divnum-discord-bot/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/tellebma/divnum-discord-bot/actions/workflows/docker-publish.yml)
 
-
-
-
-
-
-
-
