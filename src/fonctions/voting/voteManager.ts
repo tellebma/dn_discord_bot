@@ -4,8 +4,8 @@
  * Les bulletins sont stockés un par (vote, jeu, utilisateur) : un utilisateur ne
  * peut pas voter deux fois pour le même jeu (PK), mais peut voter pour plusieurs
  * jeux. La réhydratation reconstruit l'objet attendu par les commandes :
- *   { id, duree, actif, creeLe: Date, creePar, jeux: [{id, nom}],
- *     votes: Map<jeuId, Set<userId>> }
+ *   { id, guildId, channelId, messageId, duree, actif, creeLe: Date, creePar,
+ *     jeux: [{id, nom}], votes: Map<jeuId, Set<userId>> }
  */
 import { query } from '../database/connection.js';
 
@@ -16,6 +16,9 @@ export interface JeuPropose {
 
 export interface SessionVoteHydratee {
   id: string;
+  guildId: string | null;
+  channelId: string | null;
+  messageId: string | null;
   duree: number;
   actif: boolean;
   creeLe: Date;
@@ -26,6 +29,9 @@ export interface SessionVoteHydratee {
 
 interface LigneVote {
   id: string;
+  guild_id: string | null;
+  channel_id: string | null;
+  message_id: string | null;
   duree: number;
   actif: boolean;
   cree_par: string;
@@ -35,6 +41,9 @@ interface LigneVote {
 /** Objet vote accepté par creerVote (création ou mise à jour de statut). */
 interface EntreeVote {
   id: string;
+  guildId: string;
+  channelId: string;
+  messageId: string;
   duree: number;
   actif: boolean;
   creePar: string;
@@ -55,14 +64,18 @@ export class GestionnaireVotes {
 
   /**
    * Crée ou met à jour une session de vote. Idempotent sur l'id : un second
-   * appel (ex. clôture avec actif=false) ne fait que mettre à jour le statut.
+   * appel ne fait que mettre à jour le statut / les métadonnées.
    */
   public async creerVote(vote: EntreeVote): Promise<string> {
     await query(
-      `INSERT INTO votes (id, duree, actif, cree_par)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (id) DO UPDATE SET actif = EXCLUDED.actif, duree = EXCLUDED.duree`,
-      [vote.id, vote.duree, vote.actif, vote.creePar]
+      `INSERT INTO votes (id, guild_id, channel_id, message_id, duree, actif, cree_par)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (id) DO UPDATE SET
+         actif = EXCLUDED.actif,
+         duree = EXCLUDED.duree,
+         channel_id = EXCLUDED.channel_id,
+         message_id = EXCLUDED.message_id`,
+      [vote.id, vote.guildId, vote.channelId, vote.messageId, vote.duree, vote.actif, vote.creePar]
     );
 
     for (const jeu of vote.jeux) {
@@ -84,25 +97,48 @@ export class GestionnaireVotes {
     return this.hydrater(ligne);
   }
 
-  public async supprimerVote(id: string): Promise<boolean> {
-    // On clôture (actif = false) plutôt que de supprimer, pour garder l'historique.
-    const res = await query('UPDATE votes SET actif = FALSE WHERE id = $1', [id]);
+  /** Clôture un vote en restant cloisonné au serveur (commande /cancelvote). */
+  public async supprimerVote(id: string, guildId: string): Promise<boolean> {
+    const res = await query('UPDATE votes SET actif = FALSE WHERE id = $1 AND guild_id = $2', [
+      id,
+      guildId,
+    ]);
     return (res.rowCount ?? 0) > 0;
   }
 
-  public async obtenirVotesActifs(): Promise<SessionVoteHydratee[]> {
+  /** Clôture un vote sans contrôle de serveur (usage interne : cron). */
+  public async cloturerVote(id: string): Promise<void> {
+    await query('UPDATE votes SET actif = FALSE WHERE id = $1', [id]);
+  }
+
+  public async obtenirVotesActifs(guildId: string): Promise<SessionVoteHydratee[]> {
     const res = await query<LigneVote>(
-      'SELECT * FROM votes WHERE actif = TRUE ORDER BY cree_le DESC'
+      'SELECT * FROM votes WHERE guild_id = $1 AND actif = TRUE ORDER BY cree_le DESC',
+      [guildId]
     );
     return Promise.all(res.rows.map(ligne => this.hydrater(ligne)));
   }
 
-  public async obtenirSessionActive(): Promise<SessionVoteHydratee | null> {
+  public async obtenirSessionActive(guildId: string): Promise<SessionVoteHydratee | null> {
     const res = await query<LigneVote>(
-      'SELECT * FROM votes WHERE actif = TRUE ORDER BY cree_le DESC LIMIT 1'
+      'SELECT * FROM votes WHERE guild_id = $1 AND actif = TRUE ORDER BY cree_le DESC LIMIT 1',
+      [guildId]
     );
     const ligne = res.rows[0];
     return ligne ? this.hydrater(ligne) : null;
+  }
+
+  /**
+   * Votes actifs dont la durée est écoulée (cree_le + duree heures < maintenant).
+   * Utilisé par le cron de clôture, tous serveurs confondus.
+   */
+  public async obtenirVotesEchus(): Promise<SessionVoteHydratee[]> {
+    const res = await query<LigneVote>(
+      `SELECT * FROM votes
+       WHERE actif = TRUE
+         AND cree_le + (duree || ' hours')::interval < NOW()`
+    );
+    return Promise.all(res.rows.map(ligne => this.hydrater(ligne)));
   }
 
   /**
@@ -142,6 +178,9 @@ export class GestionnaireVotes {
 
     return {
       id: ligne.id,
+      guildId: ligne.guild_id,
+      channelId: ligne.channel_id,
+      messageId: ligne.message_id,
       duree: ligne.duree,
       actif: ligne.actif,
       creeLe: ligne.cree_le,

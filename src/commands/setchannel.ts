@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { StockageCanal } from '../utils/channelStorage.js';
 
 /**
@@ -7,6 +12,7 @@ import { StockageCanal } from '../utils/channelStorage.js';
 export const data = new SlashCommandBuilder()
   .setName('setchannel')
   .setDescription('Configurer les canaux du bot')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addStringOption(option =>
     option
       .setName('type')

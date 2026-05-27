@@ -23,9 +23,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const actifsUniquement = interaction.options.getBoolean('actifs') ?? false;
   const limite = interaction.options.getInteger('limite') ?? 20;
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();
-    let jeux = await gestionnaire.obtenirJeux();
+    let jeux = await gestionnaire.obtenirJeux(guildId);
 
     if (actifsUniquement) {
       jeux = jeux.filter(jeu => jeu.actif !== false);

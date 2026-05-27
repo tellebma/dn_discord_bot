@@ -1,5 +1,5 @@
 /**
- * Gestionnaire des activités extras — persisté en PostgreSQL.
+ * Gestionnaire des activités extras — persisté en PostgreSQL, cloisonné par serveur.
  */
 import { query } from './connection.js';
 
@@ -54,17 +54,25 @@ export class GestionnaireActivitesExtras {
     return GestionnaireActivitesExtras.instance;
   }
 
-  public async obtenirActivites(activesUniquement: boolean = false): Promise<ActiviteExtra[]> {
+  public async obtenirActivites(
+    guildId: string,
+    activesUniquement: boolean = false
+  ): Promise<ActiviteExtra[]> {
     const res = activesUniquement
       ? await query<LigneActivite>(
-          'SELECT * FROM activities WHERE actif = TRUE ORDER BY cree_le DESC'
+          'SELECT * FROM activities WHERE guild_id = $1 AND actif = TRUE ORDER BY cree_le DESC',
+          [guildId]
         )
-      : await query<LigneActivite>('SELECT * FROM activities ORDER BY cree_le DESC');
+      : await query<LigneActivite>(
+          'SELECT * FROM activities WHERE guild_id = $1 ORDER BY cree_le DESC',
+          [guildId]
+        );
     return res.rows.map(versActivite);
   }
 
   public async ajouterActivite(activite: {
     id: string;
+    guildId: string;
     nom: string;
     description?: string;
     categorie?: string;
@@ -72,10 +80,11 @@ export class GestionnaireActivitesExtras {
     creeePar: string;
   }): Promise<void> {
     await query(
-      `INSERT INTO activities (id, nom, description, categorie, actif, cree_par)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO activities (id, guild_id, nom, description, categorie, actif, cree_par)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         activite.id,
+        activite.guildId,
         activite.nom,
         activite.description ?? null,
         activite.categorie ?? null,
@@ -85,13 +94,17 @@ export class GestionnaireActivitesExtras {
     );
   }
 
-  public async supprimerActivite(id: string): Promise<boolean> {
-    const res = await query('DELETE FROM activities WHERE id = $1', [id]);
+  public async supprimerActivite(id: string, guildId: string): Promise<boolean> {
+    const res = await query('DELETE FROM activities WHERE id = $1 AND guild_id = $2', [
+      id,
+      guildId,
+    ]);
     return (res.rowCount ?? 0) > 0;
   }
 
   public async modifierActivite(
     id: string,
+    guildId: string,
     modifications: Record<string, unknown>
   ): Promise<boolean> {
     const sets: string[] = [];
@@ -107,8 +120,9 @@ export class GestionnaireActivitesExtras {
     if (sets.length === 0) return false;
 
     valeurs.push(id);
+    valeurs.push(guildId);
     const res = await query(
-      `UPDATE activities SET ${sets.join(', ')} WHERE id = $${valeurs.length}`,
+      `UPDATE activities SET ${sets.join(', ')} WHERE id = $${valeurs.length - 1} AND guild_id = $${valeurs.length}`,
       valeurs
     );
     return (res.rowCount ?? 0) > 0;

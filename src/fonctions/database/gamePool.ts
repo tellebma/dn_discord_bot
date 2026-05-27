@@ -1,5 +1,5 @@
 /**
- * Gestionnaire du pool de jeux — persisté en PostgreSQL.
+ * Gestionnaire du pool de jeux — persisté en PostgreSQL, cloisonné par serveur.
  */
 import { query } from './connection.js';
 
@@ -72,13 +72,17 @@ export class GestionnairePoolJeux {
     return GestionnairePoolJeux.instance;
   }
 
-  public async obtenirJeux(): Promise<Jeu[]> {
-    const res = await query<LigneJeu>('SELECT * FROM games ORDER BY ajoute_le DESC');
+  public async obtenirJeux(guildId: string): Promise<Jeu[]> {
+    const res = await query<LigneJeu>(
+      'SELECT * FROM games WHERE guild_id = $1 ORDER BY ajoute_le DESC',
+      [guildId]
+    );
     return res.rows.map(versJeu);
   }
 
   public async ajouterJeu(jeu: {
     id: string;
+    guildId: string;
     nom: string;
     description?: string;
     plateforme?: string;
@@ -90,10 +94,11 @@ export class GestionnairePoolJeux {
   }): Promise<void> {
     await query(
       `INSERT INTO games
-         (id, nom, description, plateforme, genre, joueurs_min, joueurs_max, actif, ajoute_par)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+         (id, guild_id, nom, description, plateforme, genre, joueurs_min, joueurs_max, actif, ajoute_par)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         jeu.id,
+        jeu.guildId,
         jeu.nom,
         jeu.description ?? null,
         jeu.plateforme ?? null,
@@ -106,12 +111,16 @@ export class GestionnairePoolJeux {
     );
   }
 
-  public async supprimerJeu(id: string): Promise<boolean> {
-    const res = await query('DELETE FROM games WHERE id = $1', [id]);
+  public async supprimerJeu(id: string, guildId: string): Promise<boolean> {
+    const res = await query('DELETE FROM games WHERE id = $1 AND guild_id = $2', [id, guildId]);
     return (res.rowCount ?? 0) > 0;
   }
 
-  public async modifierJeu(id: string, modifications: Record<string, unknown>): Promise<boolean> {
+  public async modifierJeu(
+    id: string,
+    guildId: string,
+    modifications: Record<string, unknown>
+  ): Promise<boolean> {
     const sets: string[] = [];
     const valeurs: unknown[] = [];
 
@@ -125,17 +134,18 @@ export class GestionnairePoolJeux {
     if (sets.length === 0) return false;
 
     valeurs.push(id);
+    valeurs.push(guildId);
     const res = await query(
-      `UPDATE games SET ${sets.join(', ')} WHERE id = $${valeurs.length}`,
+      `UPDATE games SET ${sets.join(', ')} WHERE id = $${valeurs.length - 1} AND guild_id = $${valeurs.length}`,
       valeurs
     );
     return (res.rowCount ?? 0) > 0;
   }
 
-  public async obtenirJeuxAleatoires(nombre: number = 5): Promise<Jeu[]> {
+  public async obtenirJeuxAleatoires(guildId: string, nombre: number = 5): Promise<Jeu[]> {
     const res = await query<LigneJeu>(
-      'SELECT * FROM games WHERE actif = TRUE ORDER BY RANDOM() LIMIT $1',
-      [nombre]
+      'SELECT * FROM games WHERE guild_id = $1 AND actif = TRUE ORDER BY RANDOM() LIMIT $2',
+      [guildId, nombre]
     );
     return res.rows.map(versJeu);
   }

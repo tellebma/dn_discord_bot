@@ -8,6 +8,7 @@ import { GestionnaireVotes } from './fonctions/voting/voteManager.js';
 import { GestionnaireStats } from './fonctions/analytics/statsManager.js';
 import { runMigrations } from './fonctions/database/migrations.js';
 import { testConnection, closePool } from './fonctions/database/connection.js';
+import { demarrerCronVotes } from './fonctions/scheduler/voteCron.js';
 import { Logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -190,8 +191,9 @@ client.on('interactionCreate', async (interaction: any) => {
 });
 
 // Événement déclenché une fois que le bot est prêt
-client.once('clientReady', async () => {
+client.once('clientReady', () => {
   console.log(`🤖 Le bot est prêt ! Connecté en tant que ${client.user?.tag}`);
+  demarrerCronVotes(client);
 });
 
 // Gestionnaires d'erreurs globaux

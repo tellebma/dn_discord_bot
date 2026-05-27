@@ -26,6 +26,15 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const type = interaction.options.getString('type') ?? 'general';
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaireStats = GestionnaireStats.getInstance();
     const gestionnaireJeux = GestionnairePoolJeux.getInstance();
@@ -41,9 +50,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     switch (type) {
       case 'general': {
         const stats = await gestionnaireStats.obtenirStats();
-        const jeux = await gestionnaireJeux.obtenirJeux();
-        const activites = await gestionnaireActivites.obtenirActivites();
-        const votes = await gestionnaireVotes.obtenirVotesActifs();
+        const jeux = await gestionnaireJeux.obtenirJeux(guildId);
+        const activites = await gestionnaireActivites.obtenirActivites(guildId);
+        const votes = await gestionnaireVotes.obtenirVotesActifs(guildId);
 
         embed.setDescription('Statistiques générales du bot').addFields(
           { name: '🎮 Jeux dans le pool', value: jeux.length.toString(), inline: true },
@@ -61,7 +70,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       }
 
       case 'games': {
-        const jeux = await gestionnaireJeux.obtenirJeux();
+        const jeux = await gestionnaireJeux.obtenirJeux(guildId);
         const jeuxActifs = jeux.filter(j => j.actif !== false);
         const jeuxPopulaires = jeux.sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 5);
 
@@ -90,7 +99,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       }
 
       case 'activities': {
-        const activites = await gestionnaireActivites.obtenirActivites();
+        const activites = await gestionnaireActivites.obtenirActivites(guildId);
         const activitesActives = activites.filter(a => a.actif !== false);
 
         embed.setDescription('Statistiques des activités').addFields(
@@ -128,8 +137,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       }
 
       case 'votes': {
-        const votes = await gestionnaireVotes.obtenirVotesActifs();
-        const voteActif = await gestionnaireVotes.obtenirSessionActive();
+        const votes = await gestionnaireVotes.obtenirVotesActifs(guildId);
+        const voteActif = await gestionnaireVotes.obtenirSessionActive(guildId);
 
         embed
           .setDescription('Statistiques des votes')
