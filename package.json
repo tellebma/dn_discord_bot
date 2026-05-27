@@ -18,7 +18,12 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "migrate": "node scripts/migrate.cjs",
+    "migrate:create": "node scripts/migrate.cjs create",
+    "migrate:up": "node scripts/migrate.cjs up",
+    "migrate:down": "node scripts/migrate.cjs down",
+    "migrate:redo": "node scripts/migrate.cjs redo"
   },
   "keywords": [
     "discord",
@@ -32,10 +37,12 @@
   "dependencies": {
     "discord.js": "^14.17.0",
     "dotenv": "^16.4.5",
-    "tsconfig-paths": "^4.2.0"
+    "node-pg-migrate": "^7.9.1",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
     "eslint": "^9.17.0",

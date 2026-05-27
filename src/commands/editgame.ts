@@ -44,8 +44,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const ancienneValeur = jeu[champ];
-    const modifications: any = {};
+    const ancienneValeur = String((jeu as unknown as Record<string, unknown>)[champ] ?? 'Aucune');
+    const modifications: Record<string, unknown> = {};
     modifications[champ] = valeur;
 
     const success = await gestionnaire.modifierJeu(id, modifications);
@@ -55,7 +55,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .setTitle('✅ Jeu modifié')
         .setDescription(`Le **${champ}** du jeu **${jeu.nom}** a été modifié.`)
         .addFields(
-          { name: 'Ancienne valeur', value: ancienneValeur ?? 'Aucune', inline: true },
+          { name: 'Ancienne valeur', value: ancienneValeur, inline: true },
           { name: 'Nouvelle valeur', value: valeur, inline: true }
         )
         .setColor('#00ff00')

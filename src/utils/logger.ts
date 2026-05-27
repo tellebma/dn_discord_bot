@@ -1,40 +1,60 @@
 /**
- * Système de logs
+ * Logger structuré (sortie JSON sur une ligne, parseable par n'importe quel
+ * collecteur de logs). Calqué sur le bot dvg.
  */
+export type LogContext = Record<string, unknown>;
+
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+}
+
+interface LogEntry {
+  timestamp: string;
+  level: string;
+  message: string;
+  [key: string]: unknown;
+}
+
 export class Logger {
-  private static instance: Logger;
-  private niveau: string;
-
-  private constructor() {
-    this.niveau = process.env.LOG_LEVEL ?? 'info';
+  private static formatLogEntry(
+    level: LogLevel,
+    message: string,
+    context: LogContext = {}
+  ): LogEntry {
+    return {
+      timestamp: new Date().toISOString(),
+      level: level.toUpperCase(),
+      message,
+      ...context,
+    };
   }
 
-  public static getInstance(): Logger {
-    if (!Logger.instance) {
-      Logger.instance = new Logger();
-    }
-    return Logger.instance;
+  private static output(logEntry: LogEntry): void {
+    console.log(JSON.stringify(logEntry));
   }
 
-  public info(message: string, ...args: any[]): void {
-    if (this.niveau === 'debug' || this.niveau === 'info') {
-      console.log(`[INFO] ${message}`, ...args);
-    }
+  public static log(level: LogLevel, message: string, context: LogContext = {}): void {
+    this.output(this.formatLogEntry(level, message, context));
   }
 
-  public warn(message: string, ...args: any[]): void {
-    if (this.niveau === 'debug' || this.niveau === 'info' || this.niveau === 'warn') {
-      console.warn(`[WARN] ${message}`, ...args);
-    }
+  public static info(message: string, context: LogContext = {}): void {
+    this.log(LogLevel.INFO, message, context);
   }
 
-  public error(message: string, ...args: any[]): void {
-    console.error(`[ERROR] ${message}`, ...args);
+  public static warn(message: string, context: LogContext = {}): void {
+    this.log(LogLevel.WARN, message, context);
   }
 
-  public debug(message: string, ...args: any[]): void {
-    if (this.niveau === 'debug') {
-      console.log(`[DEBUG] ${message}`, ...args);
+  public static error(message: string, context: LogContext = {}): void {
+    this.log(LogLevel.ERROR, message, context);
+  }
+
+  public static debug(message: string, context: LogContext = {}): void {
+    if (process.env['NODE_ENV'] === 'development' || process.env['LOG_LEVEL'] === 'debug') {
+      this.log(LogLevel.DEBUG, message, context);
     }
   }
 }

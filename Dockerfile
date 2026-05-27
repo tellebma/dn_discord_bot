@@ -1,52 +1,45 @@
-# Multi-stage build for TypeScript
+# syntax=docker/dockerfile:1
+# Multi-stage build pour bot Discord TypeScript
+
+# ---- Stage build ----
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and TypeScript config
+# Dépendances (avec devDependencies pour compiler TypeScript)
 COPY package*.json ./
 COPY tsconfig.json ./
-
-# Install all dependencies (including dev dependencies)
 RUN npm ci
 
-# Copy source code
+# Code source + build
 COPY src/ ./src/
-
-# Build TypeScript
 RUN npm run build
 
-# Production stage
+# On ne garde que les dépendances de production pour le stage final
+RUN npm prune --omit=dev
+
+# ---- Stage production ----
 FROM node:22-alpine AS production
 
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Copy package files
+# Artefacts depuis le builder (pas de code source, pas de tsconfig, pas de .env)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --omit=dev && npm cache clean --force
+# Migrations SQL : appliquées au démarrage par src/fonctions/database/migrations.ts
+COPY migrations/ ./migrations/
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-
-# Copy startup script
-COPY scripts/start.sh ./scripts/start.sh
-
-# Make script executable
-RUN chmod +x ./scripts/start.sh
-
-# Create env directory and copy environment files
-RUN mkdir -p /app/env
-COPY .env* /app/env/
-
-# Create non-root user and set permissions
+# Utilisateur non-root
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S botuser -u 1001 && \
+    adduser -S botuser -u 1001 -G nodejs && \
     chown -R botuser:nodejs /app
-
 USER botuser
 
-EXPOSE 3000
+# Pas de HEALTHCHECK : le bot n'expose aucun port HTTP, un check serait factice.
+# La liveness est gérée par `restart: always` côté docker-compose.
 
-CMD ["./scripts/start.sh"]
+# Enregistre les commandes slash auprès de Discord, puis lance le bot.
+CMD ["sh", "-c", "node dist/deploy-commands.js && node dist/app.js"]

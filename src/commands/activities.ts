@@ -79,6 +79,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           description,
           actif: true,
           creeeLe: new Date(),
+          creeePar: interaction.user.id,
         };
 
         await gestionnaire.ajouterActivite(nouvelleActivite);
