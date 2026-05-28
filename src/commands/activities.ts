@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnaireActivitesExtras } from '../fonctions/database/extraActivities.js';
 
 /**
@@ -7,6 +12,7 @@ import { GestionnaireActivitesExtras } from '../fonctions/database/extraActiviti
 export const data = new SlashCommandBuilder()
   .setName('activities')
   .setDescription('Gérer les activités extras')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addSubcommand(subcommand =>
     subcommand
       .setName('list')
@@ -39,6 +45,15 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   const gestionnaire = GestionnaireActivitesExtras.getInstance();
   const subcommand = interaction.options.getSubcommand();
 
@@ -46,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     switch (subcommand) {
       case 'list': {
         const activesUniquement = interaction.options.getBoolean('actives') ?? false;
-        const activites = await gestionnaire.obtenirActivites(activesUniquement);
+        const activites = await gestionnaire.obtenirActivites(guildId, activesUniquement);
 
         const embed = new EmbedBuilder()
           .setTitle('📋 Liste des activités')
@@ -75,10 +90,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
         const nouvelleActivite = {
           id: Date.now().toString(),
+          guildId,
           nom,
           description,
           actif: true,
           creeeLe: new Date(),
+          creeePar: interaction.user.id,
         };
 
         await gestionnaire.ajouterActivite(nouvelleActivite);
@@ -95,7 +112,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
       case 'remove': {
         const id = interaction.options.getString('id', true);
-        const supprimee = await gestionnaire.supprimerActivite(id);
+        const supprimee = await gestionnaire.supprimerActivite(id, guildId);
 
         if (supprimee) {
           const embed = new EmbedBuilder()

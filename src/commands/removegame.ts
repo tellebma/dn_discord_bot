@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 
 /**
@@ -7,6 +12,7 @@ import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 export const data = new SlashCommandBuilder()
   .setName('removegame')
   .setDescription('Supprimer un jeu du pool')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addStringOption(option =>
     option.setName('id').setDescription('ID du jeu à supprimer').setRequired(true)
   )
@@ -18,6 +24,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const id = interaction.options.getString('id', true);
   const confirmer = interaction.options.getBoolean('confirmer', true);
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   if (!confirmer) {
     await interaction.reply({
       content: '❌ Suppression annulée. Veuillez confirmer la suppression.',
@@ -28,7 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();
-    const jeux = await gestionnaire.obtenirJeux();
+    const jeux = await gestionnaire.obtenirJeux(guildId);
     const jeu = jeux.find(j => j.id === id);
 
     if (!jeu) {
@@ -39,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const success = await gestionnaire.supprimerJeu(id);
+    const success = await gestionnaire.supprimerJeu(id, guildId);
 
     if (success) {
       const embed = new EmbedBuilder()

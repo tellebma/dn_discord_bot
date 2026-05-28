@@ -16,6 +16,15 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const generer = interaction.options.getBoolean('generer') ?? false;
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const planificateur = PlanificateurHebdomadaire.getInstance();
     const gestionnaireJeux = GestionnairePoolJeux.getInstance();
@@ -27,8 +36,8 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     } else {
       // Simuler un plan existant
       plan = {
-        jeux: await gestionnaireJeux.obtenirJeuxAleatoires(3),
-        activites: await gestionnaireActivites.obtenirActivites(true),
+        jeux: await gestionnaireJeux.obtenirJeuxAleatoires(guildId, 3),
+        activites: await gestionnaireActivites.obtenirActivites(guildId, true),
         date: new Date(),
         periode: 'Cette semaine',
       };

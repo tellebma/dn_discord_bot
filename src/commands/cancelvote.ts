@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 
 /**
@@ -7,12 +12,22 @@ import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 export const data = new SlashCommandBuilder()
   .setName('cancelvote')
   .setDescription('Annuler le vote en cours')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addBooleanOption(option =>
     option.setName('confirmer').setDescription("Confirmer l'annulation").setRequired(true)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const confirmer = interaction.options.getBoolean('confirmer', true);
+
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
 
   if (!confirmer) {
     await interaction.reply({
@@ -24,7 +39,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   try {
     const gestionnaireVotes = GestionnaireVotes.getInstance();
-    const voteActif = await gestionnaireVotes.obtenirSessionActive();
+    const voteActif = await gestionnaireVotes.obtenirSessionActive(guildId);
 
     if (!voteActif) {
       await interaction.reply({
@@ -34,7 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const success = await gestionnaireVotes.supprimerVote(voteActif.id);
+    const success = await gestionnaireVotes.supprimerVote(voteActif.id, guildId);
 
     if (success) {
       const embed = new EmbedBuilder()

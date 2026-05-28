@@ -9,9 +9,18 @@ export const data = new SlashCommandBuilder()
   .setDescription('Afficher le statut du vote en cours');
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaireVotes = GestionnaireVotes.getInstance();
-    const voteActif = await gestionnaireVotes.obtenirSessionActive();
+    const voteActif = await gestionnaireVotes.obtenirSessionActive(guildId);
 
     if (!voteActif) {
       await interaction.reply({

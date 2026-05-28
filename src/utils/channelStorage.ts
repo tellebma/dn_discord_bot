@@ -1,9 +1,10 @@
 /**
- * Stockage des canaux
+ * Stockage des canaux configurés — persisté en PostgreSQL, clé (serveur, type).
  */
+import { query } from '../fonctions/database/connection.js';
+
 export class StockageCanal {
   private static instance: StockageCanal;
-  private canaux: Map<string, any> = new Map();
 
   private constructor() {}
 
@@ -15,14 +16,27 @@ export class StockageCanal {
   }
 
   public async definirCanal(serveurId: string, type: string, canalId: string): Promise<void> {
-    this.canaux.set(`${serveurId}-${type}`, canalId);
+    await query(
+      `INSERT INTO channels (guild_id, type, canal_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (guild_id, type) DO UPDATE SET canal_id = EXCLUDED.canal_id`,
+      [serveurId, type, canalId]
+    );
   }
 
   public async obtenirCanal(serveurId: string, type: string): Promise<string | null> {
-    return this.canaux.get(`${serveurId}-${type}`) || null;
+    const res = await query<{ canal_id: string }>(
+      'SELECT canal_id FROM channels WHERE guild_id = $1 AND type = $2',
+      [serveurId, type]
+    );
+    return res.rows[0]?.canal_id ?? null;
   }
 
   public async supprimerCanal(serveurId: string, type: string): Promise<boolean> {
-    return this.canaux.delete(`${serveurId}-${type}`);
+    const res = await query('DELETE FROM channels WHERE guild_id = $1 AND type = $2', [
+      serveurId,
+      type,
+    ]);
+    return (res.rowCount ?? 0) > 0;
   }
 }

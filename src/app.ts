@@ -1,10 +1,15 @@
-import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { config as dotenvConfig } from 'dotenv';
 import type { CommandeBot, ClientEtendu } from './types/bot.js';
 import { GestionnaireVotes } from './fonctions/voting/voteManager.js';
+import { GestionnaireStats } from './fonctions/analytics/statsManager.js';
+import { runMigrations } from './fonctions/database/migrations.js';
+import { testConnection, closePool } from './fonctions/database/connection.js';
+import { demarrerCronVotes } from './fonctions/scheduler/voteCron.js';
+import { Logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -55,10 +60,11 @@ async function chargerCommandes(): Promise<void> {
     console.log('Répertoire des commandes introuvable, création en cours...');
   }
 
-  // Déploiement des commandes
-  if (commandes.length > 0) {
-    await deployerCommandes(commandes);
-  }
+  // Le déploiement des commandes (REST) est volontairement hors du runtime :
+  // il est effectué une seule fois par `npm run deploy:commands` (dev) ou par
+  // `node dist/deploy-commands.js` au démarrage du conteneur. Redéployer à
+  // chaque boot consommerait le quota global Discord (~200 créations/jour).
+  console.log(`📦 ${commandes.length} commande(s) chargée(s) en mémoire.`);
 }
 
 /**
@@ -92,30 +98,6 @@ async function chargerEvenements(): Promise<void> {
     }
   } catch {
     console.log('Répertoire des événements introuvable, création en cours...');
-  }
-}
-
-/**
- * Déploie les commandes slash sur Discord
- */
-async function deployerCommandes(commandes: any[]): Promise<void> {
-  if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
-    console.log('❌ DISCORD_TOKEN ou DISCORD_CLIENT_ID manquant, déploiement des commandes ignoré');
-    return;
-  }
-
-  const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-
-  try {
-    console.log("🔄 Début de l'actualisation des commandes (/) de l'application.");
-
-    await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), {
-      body: commandes,
-    });
-
-    console.log("✅ Les commandes (/) de l'application ont été rechargées avec succès.");
-  } catch (erreur) {
-    console.error('❌ Erreur lors du déploiement des commandes :', erreur);
   }
 }
 
@@ -153,6 +135,7 @@ client.on('interactionCreate', async (interaction: any) => {
         const success = await gestionnaireVotes.gererVote(voteId, jeuId, interaction.user.id);
 
         if (success) {
+          await GestionnaireStats.getInstance().enregistrerVote(jeuId, interaction.user.id);
           await interaction.reply({
             content: '✅ Votre vote a été enregistré !',
             flags: 64,
@@ -208,8 +191,9 @@ client.on('interactionCreate', async (interaction: any) => {
 });
 
 // Événement déclenché une fois que le bot est prêt
-client.once('clientReady', async () => {
+client.once('clientReady', () => {
   console.log(`🤖 Le bot est prêt ! Connecté en tant que ${client.user?.tag}`);
+  demarrerCronVotes(client);
 });
 
 // Gestionnaires d'erreurs globaux
@@ -223,20 +207,50 @@ process.on('uncaughtException', (erreur: Error) => {
 });
 
 /**
+ * Arrêt propre : ferme le pool PostgreSQL et déconnecte le client Discord.
+ */
+async function arretPropre(signal: string): Promise<void> {
+  Logger.info('Arrêt du bot en cours', { signal });
+  try {
+    await client.destroy();
+    await closePool();
+  } catch (erreur) {
+    Logger.error("Erreur lors de l'arrêt", {
+      error: erreur instanceof Error ? erreur.message : String(erreur),
+    });
+  } finally {
+    process.exit(0);
+  }
+}
+
+process.on('SIGINT', () => void arretPropre('SIGINT'));
+process.on('SIGTERM', () => void arretPropre('SIGTERM'));
+
+/**
  * Initialise et démarre le bot
  */
 async function demarrer(): Promise<void> {
   try {
-    await chargerEvenements();
-    await chargerCommandes();
-
     if (!process.env.DISCORD_TOKEN) {
       throw new Error('DISCORD_TOKEN est requis');
     }
 
+    // 1. Base de données : applique les migrations puis vérifie la connexion.
+    await runMigrations();
+    const dbOk = await testConnection();
+    if (!dbOk) {
+      throw new Error('Impossible de se connecter à la base de données PostgreSQL');
+    }
+
+    // 2. Chargement des événements et commandes en mémoire.
+    await chargerEvenements();
+    await chargerCommandes();
+
+    // 3. Connexion à Discord.
     await client.login(process.env.DISCORD_TOKEN);
   } catch (erreur) {
     console.error('Échec du démarrage du bot :', erreur);
+    await closePool().catch(() => undefined);
     process.exit(1);
   }
 }

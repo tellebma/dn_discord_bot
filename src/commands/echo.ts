@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import type { ChatInputCommandInteraction } from 'discord.js';
 
 /**
@@ -29,7 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   await interaction.reply({
     content: `📢 ${messageFiltre}`,
-    ephemeral: ephemere,
+    flags: ephemere ? MessageFlags.Ephemeral : undefined,
     allowedMentions: { parse: [] }, // Empêche toutes les mentions pour la sécurité
   });
 }

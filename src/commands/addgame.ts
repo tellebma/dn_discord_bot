@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 
 /**
@@ -7,6 +12,7 @@ import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 export const data = new SlashCommandBuilder()
   .setName('addgame')
   .setDescription('Ajouter un jeu au pool de jeux')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addStringOption(option =>
     option.setName('nom').setDescription('Nom du jeu').setRequired(true).setMaxLength(100)
   )
@@ -52,11 +58,21 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const joueursMin = interaction.options.getInteger('joueursmin') ?? 1;
   const joueursMax = interaction.options.getInteger('joueursmax') ?? joueursMin;
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();
 
     const nouveauJeu = {
       id: Date.now().toString(),
+      guildId,
       nom,
       description,
       plateforme,

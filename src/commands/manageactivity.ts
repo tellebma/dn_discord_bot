@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnaireActivitesExtras } from '../fonctions/database/extraActivities.js';
 
 /**
@@ -7,6 +12,7 @@ import { GestionnaireActivitesExtras } from '../fonctions/database/extraActiviti
 export const data = new SlashCommandBuilder()
   .setName('manageactivity')
   .setDescription('Gérer une activité existante')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addStringOption(option =>
     option.setName('id').setDescription("ID de l'activité à modifier").setRequired(true)
   )
@@ -35,9 +41,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const action = interaction.options.getString('action', true);
   const valeur = interaction.options.getString('valeur');
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaire = GestionnaireActivitesExtras.getInstance();
-    const activites = await gestionnaire.obtenirActivites();
+    const activites = await gestionnaire.obtenirActivites(guildId);
     const activite = activites.find(a => a.id === id);
 
     if (!activite) {
@@ -90,7 +105,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         return;
     }
 
-    const success = await gestionnaire.modifierActivite(id, modifications);
+    const success = await gestionnaire.modifierActivite(id, guildId, modifications);
 
     if (success) {
       const embed = new EmbedBuilder()

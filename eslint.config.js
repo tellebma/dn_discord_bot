@@ -59,6 +59,8 @@ export default [
     },
   },
   {
-    ignores: ['dist/', 'node_modules/', '*.js'],
+    // Les fichiers de test sont hors du projet tsconfig (exclus du build) ;
+    // ils sont validés par vitest, pas par le lint typé.
+    ignores: ['dist/', 'node_modules/', '*.js', 'src/**/*.test.ts'],
   },
 ];

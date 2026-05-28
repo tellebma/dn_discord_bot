@@ -5,6 +5,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits,
 } from 'discord.js';
 import { GestionnaireVotes } from '../fonctions/voting/voteManager.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
@@ -15,6 +16,7 @@ import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 export const data = new SlashCommandBuilder()
   .setName('startvote')
   .setDescription('Démarrer un vote pour choisir les jeux')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addIntegerOption(option =>
     option
       .setName('nombre')
@@ -36,12 +38,21 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const nombre = interaction.options.getInteger('nombre') ?? 5;
   const duree = interaction.options.getInteger('duree') ?? 24;
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaireVotes = GestionnaireVotes.getInstance();
     const gestionnaireJeux = GestionnairePoolJeux.getInstance();
 
     // Vérifier s'il y a déjà un vote actif
-    const voteActif = await gestionnaireVotes.obtenirSessionActive();
+    const voteActif = await gestionnaireVotes.obtenirSessionActive(guildId);
     if (voteActif) {
       await interaction.reply({
         content: "❌ Un vote est déjà en cours. Veuillez d'abord l'annuler.",
@@ -51,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     }
 
     // Obtenir des jeux aléatoires
-    const jeux = await gestionnaireJeux.obtenirJeuxAleatoires(nombre);
+    const jeux = await gestionnaireJeux.obtenirJeuxAleatoires(guildId, nombre);
 
     if (jeux.length < 3) {
       await interaction.reply({
@@ -62,18 +73,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    // Créer le vote
-    const vote = {
-      id: Date.now().toString(),
-      jeux: jeux.slice(0, nombre),
-      duree: duree,
-      actif: true,
-      creeLe: new Date(),
-      creePar: interaction.user.id,
-      votes: new Map(),
-    };
-
-    await gestionnaireVotes.creerVote(vote);
+    const voteId = Date.now().toString();
 
     // Créer l'embed
     const embed = new EmbedBuilder()
@@ -83,7 +83,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .setTimestamp()
       .setFooter({ text: `Créé par ${interaction.user.tag}` });
 
-    // Ajouter les jeux à l'embed
     jeux.forEach((jeu, index) => {
       embed.addFields({
         name: `${index + 1}. ${jeu.nom}`,
@@ -97,56 +96,44 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     jeux.forEach((jeu, index) => {
       row.addComponents(
         new ButtonBuilder()
-          .setCustomId(`vote_${vote.id}_${jeu.id}`)
+          .setCustomId(`vote_${voteId}_${jeu.id}`)
           .setLabel(`${index + 1}. ${jeu.nom}`)
           .setStyle(ButtonStyle.Primary)
       );
     });
 
-    await interaction.reply({ embeds: [embed], components: [row] });
+    // Publier le message de vote, puis persister le vote avec l'id du message.
+    // La clôture et l'annonce des résultats sont gérées par le cron de votes
+    // (channel.send), pas par un setTimeout volatil + interaction.followUp.
+    const message = await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      withResponse: true,
+    });
+    const messageId = message.resource?.message?.id ?? '';
 
-    // Programmer la fin du vote
-    setTimeout(
-      async () => {
-        const voteFinal = await gestionnaireVotes.obtenirVote(vote.id);
-        if (voteFinal && voteFinal.actif) {
-          // Terminer le vote
-          voteFinal.actif = false;
-          await gestionnaireVotes.creerVote(voteFinal);
-
-          // Afficher les résultats
-          const embedResultats = new EmbedBuilder()
-            .setTitle('🏆 Résultats du vote')
-            .setDescription('Le vote est terminé ! Voici les résultats :')
-            .setColor('#ffd700')
-            .setTimestamp();
-
-          // Trier les jeux par nombre de votes
-          const jeuxTries = jeux.sort((a, b) => {
-            const votesA = voteFinal.votes.get(a.id)?.size ?? 0;
-            const votesB = voteFinal.votes.get(b.id)?.size ?? 0;
-            return votesB - votesA;
-          });
-
-          jeuxTries.forEach((jeu, index) => {
-            const votes = voteFinal.votes.get(jeu.id)?.size ?? 0;
-            embedResultats.addFields({
-              name: `${index + 1}. ${jeu.nom}`,
-              value: `**${votes} vote(s)**`,
-              inline: true,
-            });
-          });
-
-          await interaction.followUp({ embeds: [embedResultats] });
-        }
-      },
-      duree * 60 * 60 * 1000
-    ); // Convertir en millisecondes
+    await gestionnaireVotes.creerVote({
+      id: voteId,
+      guildId,
+      channelId: interaction.channelId,
+      messageId,
+      duree,
+      actif: true,
+      creePar: interaction.user.id,
+      jeux: jeux.map(j => ({ id: j.id, nom: j.nom })),
+    });
   } catch (error) {
     console.error('Erreur lors du démarrage du vote:', error);
-    await interaction.reply({
-      content: '❌ Une erreur est survenue lors du démarrage du vote.',
-      flags: 64,
-    });
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: '❌ Une erreur est survenue lors du démarrage du vote.',
+        flags: 64,
+      });
+    } else {
+      await interaction.reply({
+        content: '❌ Une erreur est survenue lors du démarrage du vote.',
+        flags: 64,
+      });
+    }
   }
 }

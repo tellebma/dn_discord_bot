@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  PermissionFlagsBits,
+} from 'discord.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 
 /**
@@ -7,6 +12,7 @@ import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
 export const data = new SlashCommandBuilder()
   .setName('editgame')
   .setDescription('Modifier un jeu du pool')
+  .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
   .addStringOption(option =>
     option.setName('id').setDescription('ID du jeu à modifier').setRequired(true)
   )
@@ -31,9 +37,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const champ = interaction.options.getString('champ', true);
   const valeur = interaction.options.getString('valeur', true);
 
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    await interaction.reply({
+      content: '❌ Cette commande doit être utilisée dans un serveur.',
+      flags: 64,
+    });
+    return;
+  }
+
   try {
     const gestionnaire = GestionnairePoolJeux.getInstance();
-    const jeux = await gestionnaire.obtenirJeux();
+    const jeux = await gestionnaire.obtenirJeux(guildId);
     const jeu = jeux.find(j => j.id === id);
 
     if (!jeu) {
@@ -44,18 +59,18 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       return;
     }
 
-    const ancienneValeur = jeu[champ];
-    const modifications: any = {};
+    const ancienneValeur = String((jeu as unknown as Record<string, unknown>)[champ] ?? 'Aucune');
+    const modifications: Record<string, unknown> = {};
     modifications[champ] = valeur;
 
-    const success = await gestionnaire.modifierJeu(id, modifications);
+    const success = await gestionnaire.modifierJeu(id, guildId, modifications);
 
     if (success) {
       const embed = new EmbedBuilder()
         .setTitle('✅ Jeu modifié')
         .setDescription(`Le **${champ}** du jeu **${jeu.nom}** a été modifié.`)
         .addFields(
-          { name: 'Ancienne valeur', value: ancienneValeur ?? 'Aucune', inline: true },
+          { name: 'Ancienne valeur', value: ancienneValeur, inline: true },
           { name: 'Nouvelle valeur', value: valeur, inline: true }
         )
         .setColor('#00ff00')
