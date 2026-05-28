@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/tellebma/dn_discord_bot/compare/v1.0.0...v1.1.0) (2026-05-28)
+
+### Features
+
+- **backlog:** plan hebdo généré depuis la DB + enrichissement RAWG de /addgame ([03ce118](https://github.com/tellebma/dn_discord_bot/commit/03ce1185377acab0e1c7c23854c4b1cfb818c21a))
+
 # 1.0.0 (2026-05-28)
 
 ### Bug Fixes

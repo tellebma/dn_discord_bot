@@ -1,6 +1,6 @@
 {
   "name": "discord-bot-template-ts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Discord bot template with TypeScript, featuring advanced command system and modern development practices",
   "main": "dist/app.js",
   "type": "module",
