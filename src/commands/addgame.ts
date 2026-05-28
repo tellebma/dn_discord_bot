@@ -3,8 +3,10 @@ import {
   EmbedBuilder,
   ChatInputCommandInteraction,
   PermissionFlagsBits,
+  MessageFlags,
 } from 'discord.js';
 import { GestionnairePoolJeux } from '../fonctions/database/gamePool.js';
+import { RawgAPI } from '../fonctions/external/rawgAPI.js';
 
 /**
  * Commande pour ajouter un jeu au pool
@@ -52,9 +54,9 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const nom = interaction.options.getString('nom', true);
-  const description = interaction.options.getString('description') ?? 'Aucune description';
-  const plateforme = interaction.options.getString('plateforme') ?? 'Multi-plateforme';
-  const genre = interaction.options.getString('genre') ?? 'Non spécifié';
+  const descriptionInput = interaction.options.getString('description');
+  const plateformeInput = interaction.options.getString('plateforme');
+  const genreInput = interaction.options.getString('genre');
   const joueursMin = interaction.options.getInteger('joueursmin') ?? 1;
   const joueursMax = interaction.options.getInteger('joueursmax') ?? joueursMin;
 
@@ -67,7 +69,32 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     return;
   }
 
+  // L'enrichissement RAWG fait un appel réseau (jusqu'à 8s) : on défère pour ne
+  // pas dépasser la fenêtre de réponse de 3s de Discord.
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
   try {
+    const description = descriptionInput ?? 'Aucune description';
+    let plateforme = plateformeInput ?? 'Multi-plateforme';
+    let genre = genreInput ?? 'Non spécifié';
+    let enrichi = false;
+
+    // Si l'utilisateur n'a pas renseigné genre/plateforme, on tente RAWG.
+    const rawg = RawgAPI.getInstance();
+    if (rawg.estConfigure() && (genreInput === null || plateformeInput === null)) {
+      const [premier] = await rawg.rechercherJeu(nom, 1);
+      if (premier) {
+        if (genreInput === null && premier.genres.length > 0) {
+          genre = premier.genres.slice(0, 3).join(', ');
+          enrichi = true;
+        }
+        if (plateformeInput === null && premier.plateformes.length > 0) {
+          plateforme = premier.plateformes.slice(0, 3).join(', ');
+          enrichi = true;
+        }
+      }
+    }
+
     const gestionnaire = GestionnairePoolJeux.getInstance();
 
     const nouveauJeu = {
@@ -99,14 +126,17 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       )
       .setColor('#00ff00')
       .setTimestamp()
-      .setFooter({ text: `Ajouté par ${interaction.user.tag}` });
+      .setFooter({
+        text: enrichi
+          ? `Ajouté par ${interaction.user.tag} • enrichi via RAWG`
+          : `Ajouté par ${interaction.user.tag}`,
+      });
 
-    await interaction.reply({ embeds: [embed], flags: 64 });
+    await interaction.editReply({ embeds: [embed] });
   } catch (error) {
     console.error("Erreur lors de l'ajout de jeu:", error);
-    await interaction.reply({
+    await interaction.editReply({
       content: "❌ Une erreur est survenue lors de l'ajout du jeu.",
-      flags: 64,
     });
   }
 }

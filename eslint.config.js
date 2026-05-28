@@ -19,6 +19,7 @@ export default [
         Buffer: 'readonly',
         global: 'writable',
         fetch: 'readonly',
+        AbortSignal: 'readonly',
         setTimeout: 'readonly',
         setInterval: 'readonly',
         clearTimeout: 'readonly',
