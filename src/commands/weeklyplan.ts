@@ -32,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
     let plan;
     if (generer) {
-      plan = await planificateur.genererPlanHebdomadaire();
+      plan = await planificateur.genererPlanHebdomadaire(guildId);
     } else {
       // Simuler un plan existant
       plan = {
@@ -81,10 +81,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       });
     }
 
-    if (
-      (!plan.jeux || plan.jeux.length === 0) &&
-      (!plan.activites || plan.activites.length === 0)
-    ) {
+    if (plan.jeux?.length === 0 && plan.activites?.length === 0) {
       embed.setDescription(
         'Aucun contenu disponible pour cette semaine.\nUtilisez `/addgame` et `/addactivity` pour ajouter du contenu.'
       );
