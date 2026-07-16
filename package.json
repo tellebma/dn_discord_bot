@@ -39,7 +39,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^14.17.0",
+    "discord.js": "^14.27.0",
     "dotenv": "^16.4.5",
     "node-cron": "^4.2.1",
     "node-pg-migrate": "^7.9.1",
